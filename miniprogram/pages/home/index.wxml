@@ -91,11 +91,32 @@
   </view>
 
   <view class="card">
-    <view class="section-title">店里想传达的感觉</view>
-    <view wx:for="{{featuredCards}}" wx:key="title" class="soft-panel feature-card">
-      <view class="feature-label">{{item.title}}</view>
-      <view class="muted mt-8">{{item.desc}}</view>
+    <view class="section-head">
+      <view class="section-title">新鲜现炖</view>
+      <view class="muted">想让你看一眼就想点</view>
     </view>
+    <scroll-view class="fresh-scroll" scroll-x enhanced show-scrollbar="false">
+      <view class="fresh-list">
+        <view wx:for="{{freshCards}}" wx:key="id" class="fresh-card">
+          <image class="fresh-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="fresh-body">
+            <view class="fresh-tag">{{item.tag}}</view>
+            <view class="fresh-title">{{item.title}}</view>
+            <view class="muted mt-8 fresh-desc">{{item.desc}}</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点一份热汤</view>
+  </view>
+
+  <view class="card">
+    <view class="section-head">
+      <view class="section-title">联系店长</view>
+      <view class="tag">售后 / 咨询</view>
+    </view>
+    <image class="contact-qr" src="{{ownerQrImage}}" mode="widthFix" bindtap="previewQr"></image>
+    <view class="muted mt-12">如果要改单、确认配送或售后，直接扫码联系会更快。</view>
   </view>
 
   <view class="mask" wx:if="{{showOwnerModal}}" bindtap="closeOwnerModal"></view>

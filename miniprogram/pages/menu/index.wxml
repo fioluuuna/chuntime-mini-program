@@ -25,7 +25,15 @@
       </view>
     </view>
 
-    <scroll-view class="menu-content-scroll" scroll-y enhanced show-scrollbar="false" scroll-with-animation scroll-into-view="{{scrollTarget}}">
+    <scroll-view
+      class="menu-content-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="false"
+      scroll-with-animation
+      scroll-top="{{menuScrollTop}}"
+      bindscroll="handleMenuScroll"
+    >
       <view class="menu-content">
         <view class="card content-card section-anchor" id="section-soup">
           <view class="section-head">

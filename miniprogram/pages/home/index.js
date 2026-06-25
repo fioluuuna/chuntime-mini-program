@@ -17,7 +17,7 @@ Page({
     ownerQrImage: catalog.images.paymentQr,
     availableCount: 0,
     hotSoups: [],
-    featuredCards: [],
+    freshCards: [],
     showOwnerModal: false,
     ownerCode: "",
   },
@@ -57,18 +57,27 @@ Page({
     this.setData({
       shop: { ...this.data.shop, ...config },
       hotSoups,
-      featuredCards: [
+      freshCards: [
         {
-          title: "每天现点现做",
-          desc: "不是预制热一热，顾客拿到手里应该是有温度、有香气的一份炖汤。",
+          id: "fresh-1",
+          image: "/assets/images/dish-01.jpg",
+          tag: "每日新鲜采购",
+          title: "汤底每天重新备料",
+          desc: "不是冻品拼一拼，食材新鲜这件事，顾客喝第一口就能感觉到。",
         },
         {
-          title: "一个人也能轻松运营",
-          desc: "小程序会把订单、库存、耗材和日报收在一起，店长手机上就能处理。",
+          id: "fresh-2",
+          image: "/assets/images/dish-03.jpg",
+          tag: "现点现炖",
+          title: "下单后再认真出餐",
+          desc: "尽量让每一份送到手上的炖汤，都保留热气和香气。",
         },
         {
-          title: "复购路径更清楚",
-          desc: "积分、老客券、连续下单奖励放在同一条链路里，顾客更容易回头。",
+          id: "fresh-3",
+          image: "/assets/images/dish-07.jpg",
+          tag: "拒绝预制感",
+          title: "喝起来像家里刚炖好",
+          desc: "不想做那种标准化到没温度的餐，想让人记住的是舒服和安心。",
         },
       ],
       availableCount: products.filter((item) => Number(item.stock || 0) > 0).length,

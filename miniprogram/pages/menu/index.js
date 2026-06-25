@@ -22,7 +22,7 @@ Page({
       { key: "combo", label: "套餐" },
     ],
     activeCategory: "soup",
-    scrollTarget: "section-soup",
+    menuScrollTop: 0,
     soups: [],
     noodles: [],
     selectedSoupId: "",
@@ -76,13 +76,64 @@ Page({
       cartTotalText: toPriceText(cartTotal),
     })
     this.refreshComboSummary()
+    wx.nextTick(() => {
+      this.measureSections()
+      setTimeout(() => {
+        this.measureSections()
+      }, 280)
+    })
+  },
+
+  measureSections() {
+    const query = wx.createSelectorQuery().in(this)
+    query.select(".menu-content-scroll").boundingClientRect()
+    query.select("#section-soup").boundingClientRect()
+    query.select("#section-noodle").boundingClientRect()
+    query.select("#section-combo").boundingClientRect()
+    query.exec((res) => {
+      const [scrollRect, soupRect, noodleRect, comboRect] = res || []
+      if (!scrollRect || !soupRect || !noodleRect || !comboRect) return
+
+      const currentScrollTop = this.data.menuScrollTop || 0
+      this.sectionTopMap = {
+        soup: Math.max(0, soupRect.top - scrollRect.top + currentScrollTop),
+        noodle: Math.max(0, noodleRect.top - scrollRect.top + currentScrollTop),
+        combo: Math.max(0, comboRect.top - scrollRect.top + currentScrollTop),
+      }
+    })
   },
 
   selectCategory(e) {
     const key = e.currentTarget.dataset.key
+    const nextTop = this.sectionTopMap && typeof this.sectionTopMap[key] === "number"
+      ? Math.max(0, this.sectionTopMap[key] - 8)
+      : 0
+
     this.setData({
       activeCategory: key,
-      scrollTarget: `section-${key}`,
+      menuScrollTop: nextTop,
+    })
+  },
+
+  handleMenuScroll(e) {
+    const scrollTop = e.detail.scrollTop || 0
+    const topMap = this.sectionTopMap || {}
+    const entries = Object.keys(topMap).map((key) => ({ key, top: topMap[key] }))
+    if (!entries.length) {
+      this.setData({ menuScrollTop: scrollTop })
+      return
+    }
+
+    let activeCategory = entries[0].key
+    for (let i = 0; i < entries.length; i += 1) {
+      if (scrollTop + 24 >= entries[i].top) {
+        activeCategory = entries[i].key
+      }
+    }
+
+    this.setData({
+      menuScrollTop: scrollTop,
+      activeCategory,
     })
   },
 
