@@ -28,6 +28,21 @@
   margin-bottom: 6rpx;
 }
 
+.stock-controls {
+  display: flex;
+  gap: 12rpx;
+}
+
+.stock-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 999rpx;
+  background: #f4ede3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .admin-actions {
   display: grid;
   grid-template-columns: 1fr;
@@ -45,4 +60,3 @@
   font-weight: 700;
   margin-bottom: 6rpx;
 }
-

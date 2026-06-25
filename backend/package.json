@@ -1,0 +1,10 @@
+{
+  "name": "chuntime-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend API for the Chuntime mini program",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+

@@ -12,7 +12,13 @@
   <view class="card">
     <view class="section-title">路线图</view>
     <image class="image route-image" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
-    <view class="muted mt-16">点击图片可放大查看。也可以把它放到首页和门店页，顾客更容易找到。</view>
+    <view class="muted mt-16">点击图片可放大查看。首页和门店页都保留了路线图，方便顾客快速找到店。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">门店信息</view>
+    <view class="muted">地址：{{shop.address}}</view>
+    <view class="muted mt-12">联系电话：{{shop.phone}}</view>
   </view>
 
   <view class="grid-2">
@@ -20,4 +26,3 @@
     <view class="btn btn-ghost" bindtap="previewRoute">放大路线图</view>
   </view>
 </view>
-

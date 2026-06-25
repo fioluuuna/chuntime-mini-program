@@ -20,7 +20,14 @@
 
   <view class="card">
     <view class="section-title">我的券包</view>
-    <view wx:for="{{coupons}}" wx:key="*this" class="coupon-item">{{item}}</view>
+    <view wx:for="{{coupons}}" wx:key="id" class="coupon-item">
+      <view class="row space-between">
+        <view>
+          <view class="coupon-title">{{item.title}}</view>
+          <view class="muted mt-8">{{item.desc}}</view>
+        </view>
+        <view class="pill">{{item.type === 'discount' ? '折扣券' : '兑换券'}}</view>
+      </view>
+    </view>
   </view>
 </view>
-

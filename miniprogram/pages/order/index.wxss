@@ -1,6 +1,80 @@
+.cart-row,
+.order-row {
+  display: flex;
+  gap: 18rpx;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f2ebe3;
+}
+
+.cart-row:last-child,
+.order-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cart-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 16rpx;
+  flex: 0 0 auto;
+}
+
+.cart-body {
+  flex: 1;
+}
+
+.cart-name,
 .order-id {
   font-size: 28rpx;
   font-weight: 700;
+}
+
+.qty-btn {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  background: #f4ede3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-value {
+  min-width: 48rpx;
+  text-align: center;
+}
+
+.radio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-right: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f7f2ea;
+  border-radius: 18rpx;
+  padding: 20rpx;
+  margin-top: 14rpx;
+}
+
+.textarea {
+  min-height: 140rpx;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 1rpx dashed #efe4d8;
+}
+
+.result-row:last-child {
+  border-bottom: none;
 }
 
 .status {

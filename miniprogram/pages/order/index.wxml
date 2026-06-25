@@ -1,17 +1,62 @@
 <view class="page">
   <view class="card">
-    <view class="section-title">订单状态</view>
-    <view class="muted">这里先做成手机可看的订单汇总，后续可以接真实接口。</view>
+    <view class="section-title">当前购物车</view>
+    <view wx:if="{{cart.length === 0}}" class="muted">还没有商品，先去菜单页或套餐页加入商品。</view>
+    <view wx:for="{{cart}}" wx:key="id" class="cart-row">
+      <image class="cart-image" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="cart-body">
+        <view class="row space-between">
+          <view class="cart-name">{{item.productName}}</view>
+          <view class="price">¥{{item.price}}</view>
+        </view>
+        <view class="row mt-12">
+          <view class="qty-btn" bindtap="minusItem" data-id="{{item.id}}">-</view>
+          <view class="qty-value">{{item.quantity}}</view>
+          <view class="qty-btn" bindtap="plusItem" data-id="{{item.id}}">+</view>
+        </view>
+      </view>
+    </view>
   </view>
 
-  <view class="card" wx:for="{{orders}}" wx:key="id">
-    <view class="row space-between">
-      <view>
-        <view class="order-id">{{item.id}} · {{item.name}}</view>
-        <view class="muted mt-12">{{item.item}}</view>
+  <view class="card">
+    <view class="section-title">配送信息</view>
+    <radio-group bindchange="changeFulfillment">
+      <label class="radio-item">
+        <radio value="配送" checked="{{fulfillmentType === '配送'}}" />
+        <text>配送</text>
+      </label>
+      <label class="radio-item">
+        <radio value="自提" checked="{{fulfillmentType === '自提'}}" />
+        <text>自提</text>
+      </label>
+    </radio-group>
+
+    <input class="input" placeholder="联系人" value="{{customerName}}" data-field="customerName" bindinput="bindInput" />
+    <input class="input" placeholder="手机号" value="{{phone}}" data-field="phone" bindinput="bindInput" />
+    <input class="input" placeholder="配送地址或自提说明" value="{{address}}" data-field="address" bindinput="bindInput" />
+    <textarea class="textarea" placeholder="备注，比如少辣、到店前联系我" value="{{remark}}" data-field="remark" bindinput="bindInput"></textarea>
+  </view>
+
+  <view class="card">
+    <view class="section-title">结算汇总</view>
+    <view class="result-row"><text>原价小计</text><text>¥{{totals.subtotalText}}</text></view>
+    <view class="result-row"><text>折后小计</text><text>¥{{totals.discountedSubtotalText}}</text></view>
+    <view class="result-row"><text>配送费</text><text>¥{{totals.shippingText}}</text></view>
+    <view class="result-row"><text>本单已省</text><text>¥{{totals.savingsText}}</text></view>
+    <view class="result-row"><text>应付金额</text><text class="price">¥{{totals.totalText}}</text></view>
+    <view class="btn mt-20" bindtap="submitOrder">提交订单</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">最近订单</view>
+    <view wx:for="{{orders}}" wx:key="id" class="order-row">
+      <view class="row space-between">
+        <view>
+          <view class="order-id">{{item.id}} · {{item.name}}</view>
+          <view class="muted mt-8">{{item.fulfillmentType}} · {{item.createdAt}}</view>
+        </view>
+        <view class="status">{{item.status}}</view>
       </view>
-      <view class="status">{{item.status}}</view>
     </view>
   </view>
 </view>
-

@@ -20,8 +20,16 @@
     <view class="section-title">库存确认</view>
     <view class="muted mb-16">这里只保留“确认库存”和“售罄控制”，不自动算采购需求。</view>
     <view wx:for="{{stocks}}" wx:key="name" class="stock-row">
-      <view class="stock-name">{{item.name}}</view>
-      <view class="muted">预订 {{item.reserved}} · 剩余 {{item.remaining}} / 总 {{item.stock}}</view>
+      <view class="row space-between">
+        <view>
+          <view class="stock-name">{{item.name}}</view>
+          <view class="muted">预订 {{item.reserved}} · 剩余 {{item.remaining}} / 总 {{item.stock}}</view>
+        </view>
+        <view class="stock-controls">
+          <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="-1">-</view>
+          <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="1">+</view>
+        </view>
+      </view>
     </view>
   </view>
 
@@ -47,5 +55,6 @@
         <view class="muted">看积分、储值和券包情况</view>
       </view>
     </view>
+    <view class="btn mt-20" bindtap="resetDemoData">重置演示数据</view>
   </view>
 </view>

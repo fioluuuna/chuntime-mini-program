@@ -25,3 +25,7 @@
   padding-bottom: 0;
 }
 
+.coupon-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}

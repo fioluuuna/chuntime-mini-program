@@ -16,3 +16,6 @@
   border-bottom: none;
 }
 
+.row {
+  gap: 16rpx;
+}

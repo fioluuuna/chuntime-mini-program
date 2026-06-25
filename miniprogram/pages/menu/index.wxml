@@ -9,7 +9,10 @@
   </view>
 
   <view class="card">
-    <view class="section-title">汤品</view>
+    <view class="row space-between mb-16">
+      <view class="section-title">汤品</view>
+      <view class="muted">点击加购，直接进入订单</view>
+    </view>
     <view wx:for="{{soups}}" wx:key="id" class="menu-item">
       <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
       <view class="menu-body">
@@ -19,12 +22,18 @@
         </view>
         <view class="muted mt-8">{{item.desc}}</view>
         <view class="muted mt-12">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
+        <view class="mt-12">
+          <view class="btn btn-ghost" bindtap="addSoup" data-id="{{item.id}}">{{item.soldOut ? "已售罄" : "加入购物车"}}</view>
+        </view>
       </view>
     </view>
   </view>
 
   <view class="card">
-    <view class="section-title">主食面条</view>
+    <view class="row space-between mb-16">
+      <view class="section-title">主食面条</view>
+      <view class="muted">也可以单独点</view>
+    </view>
     <view wx:for="{{noodles}}" wx:key="id" class="menu-item">
       <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
       <view class="menu-body">
@@ -34,7 +43,20 @@
         </view>
         <view class="muted mt-8">{{item.desc}}</view>
         <view class="muted mt-12">原价 ¥{{item.originalText}}</view>
+        <view class="mt-12">
+          <view class="btn btn-ghost" bindtap="addNoodle" data-id="{{item.id}}">加入购物车</view>
+        </view>
       </view>
+    </view>
+  </view>
+
+  <view class="card sticky-summary">
+    <view class="row space-between">
+      <view>
+        <view class="section-title">购物车</view>
+        <view class="muted">共 {{cartCount}} 件 · 小计 ¥{{cartTotalText}}</view>
+      </view>
+      <view class="btn" bindtap="goCheckout">去结算</view>
     </view>
   </view>
 </view>

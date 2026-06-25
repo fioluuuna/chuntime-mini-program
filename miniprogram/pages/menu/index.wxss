@@ -26,3 +26,8 @@
   font-weight: 700;
 }
 
+.sticky-summary {
+  position: sticky;
+  bottom: 28rpx;
+  z-index: 10;
+}
