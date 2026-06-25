@@ -28,3 +28,21 @@
   margin-bottom: 6rpx;
 }
 
+.admin-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16rpx;
+}
+
+.action-item {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: #f8f4ee;
+}
+
+.action-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+

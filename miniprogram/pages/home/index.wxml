@@ -1,24 +1,33 @@
 <view class="page">
   <view class="card hero">
     <image class="image hero-image" src="{{menuPoster}}" mode="aspectFill"></image>
-    <view class="hero-overlay">
-      <view class="title">{{shop.name}}</view>
-      <view class="subtitle">把时间炖进汤里，慢下来，才是时光</view>
-      <view class="mt-16">
-        <text class="pill">{{shop.openingDiscountText}}</text>
+    <view class="hero-mask"></view>
+    <view class="hero-content">
+      <view class="hero-title">{{shop.name}}</view>
+      <view class="hero-subtitle">把时间炖进汤里，慢下来，才是时光</view>
+      <view class="hero-pills">
         <text class="pill">{{shop.hours}}</text>
+        <text class="pill">{{shop.openingDiscountText}}</text>
       </view>
     </view>
   </view>
 
   <view class="grid-2">
-    <view class="card quick" bindtap="goTo" data-page="menu">
-      <view class="section-title">今日菜单</view>
-      <view class="muted">看汤品、面品、折扣价和库存</view>
+    <view class="card shortcut" bindtap="goTo" data-page="menu">
+      <view class="shortcut-title">今日菜单</view>
+      <view class="shortcut-desc">看汤品、面品、折扣和库存</view>
     </view>
-    <view class="card quick" bindtap="goTo" data-page="combo">
-      <view class="section-title">组合套餐</view>
-      <view class="muted">汤和面分别选，自动计算价格</view>
+    <view class="card shortcut" bindtap="goTo" data-page="combo">
+      <view class="shortcut-title">组合套餐</view>
+      <view class="shortcut-desc">汤和面分别选，系统自动计价</view>
+    </view>
+    <view class="card shortcut" bindtap="goTo" data-page="member">
+      <view class="shortcut-title">会员中心</view>
+      <view class="shortcut-desc">积分、储值、优惠券都在这里</view>
+    </view>
+    <view class="card shortcut" bindtap="goTo" data-page="store">
+      <view class="shortcut-title">门店路线</view>
+      <view class="shortcut-desc">路线图、电话、营业时间一眼看到</view>
     </view>
   </view>
 
@@ -42,8 +51,8 @@
           <view class="soup-name">{{item.name}}</view>
           <view class="price">¥{{item.salePrice}}</view>
         </view>
-        <view class="muted">{{item.desc}}</view>
-        <view class="muted mt-16">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
+        <view class="muted mt-8">{{item.desc}}</view>
+        <view class="muted mt-12">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
       </view>
     </view>
   </view>
@@ -54,7 +63,7 @@
       <view class="btn btn-ghost" bindtap="goTo" data-page="store">看路线图</view>
     </view>
     <image class="image route-preview" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
-    <view class="muted mt-16">意库66栋，暖心素火锅隔壁。点开可以放大看路线。</view>
+    <view class="muted mt-16">意库66栋，暖心素火锅隔壁。点开可放大查看路线。</view>
   </view>
 
   <view class="grid-2">
@@ -62,4 +71,3 @@
     <view class="btn btn-ghost" bindtap="goTo" data-page="admin">店长后台</view>
   </view>
 </view>
-

@@ -4,7 +4,7 @@
     <view class="mt-16">
       <view class="section-title">开业活动</view>
       <view class="muted">{{shop.openingDiscountText}}</view>
-      <view class="muted">配送范围：{{shop.deliveryAreas[0]}} / {{shop.deliveryAreas[1]}} / {{shop.deliveryAreas[2]}}</view>
+      <view class="muted mt-8">营业时间 {{shop.hours}} · 配送 {{shop.deliveryAreas[0]}} / {{shop.deliveryAreas[1]}} / {{shop.deliveryAreas[2]}}</view>
     </view>
   </view>
 
@@ -17,7 +17,7 @@
           <view class="menu-name">{{item.name}}</view>
           <view class="price">¥{{item.salePrice}}</view>
         </view>
-        <view class="muted">{{item.desc}}</view>
+        <view class="muted mt-8">{{item.desc}}</view>
         <view class="muted mt-12">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
       </view>
     </view>
@@ -32,10 +32,9 @@
           <view class="menu-name">{{item.name}}</view>
           <view class="price">¥{{item.salePrice}}</view>
         </view>
-        <view class="muted">{{item.desc}}</view>
+        <view class="muted mt-8">{{item.desc}}</view>
         <view class="muted mt-12">原价 ¥{{item.originalText}}</view>
       </view>
     </view>
   </view>
 </view>
-

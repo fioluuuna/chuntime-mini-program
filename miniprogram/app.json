@@ -13,6 +13,34 @@
     "navigationBarBackgroundColor": "#fff8f1",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#fff8f1"
+  },
+  "tabBar": {
+    "color": "#6f6256",
+    "selectedColor": "#2f5d3a",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/menu/index",
+        "text": "菜单"
+      },
+      {
+        "pagePath": "pages/combo/index",
+        "text": "套餐"
+      },
+      {
+        "pagePath": "pages/member/index",
+        "text": "会员"
+      },
+      {
+        "pagePath": "pages/store/index",
+        "text": "门店"
+      }
+    ]
   }
 }
 

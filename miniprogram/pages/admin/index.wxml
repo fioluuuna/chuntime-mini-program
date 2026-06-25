@@ -1,7 +1,12 @@
 <view class="page">
   <view class="card">
     <view class="title">店长后台</view>
-    <view class="subtitle">手机上就能看订单、看库存、看日报，不需要导出表格也能先管理起来。</view>
+    <view class="subtitle">手机上就能看订单、看库存、看日报，不需要导出表格也能先管起来。</view>
+    <view class="mt-16">
+      <text class="pill">仅库存确认</text>
+      <text class="pill">仅售罄控制</text>
+      <text class="pill">手机日报</text>
+    </view>
   </view>
 
   <view class="grid-2">
@@ -25,5 +30,22 @@
     <view class="muted">{{reportText}}</view>
     <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
   </view>
-</view>
 
+  <view class="card">
+    <view class="section-title">店长常用动作</view>
+    <view class="admin-actions">
+      <view class="action-item">
+        <view class="action-title">改库存</view>
+        <view class="muted">随时手动修改剩余份数</view>
+      </view>
+      <view class="action-item">
+        <view class="action-title">看订单</view>
+        <view class="muted">查看待接单、备餐中、待取餐</view>
+      </view>
+      <view class="action-item">
+        <view class="action-title">看会员</view>
+        <view class="muted">看积分、储值和券包情况</view>
+      </view>
+    </view>
+  </view>
+</view>
