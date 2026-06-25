@@ -95,7 +95,7 @@
           <view class="muted mt-8">{{item.createdAt}}</view>
           <view class="muted mt-8">金额 ¥{{item.totals.total}}</view>
         </view>
-        <view class="status status-{{item.status}}">{{item.status}}</view>
+        <view class="status status-{{item.statusClass}}">{{item.status}}</view>
       </view>
       <view class="order-actions mt-16">
         <view wx:if="{{item.status === '待付款'}}" class="btn btn-ghost" bindtap="goPayment" data-id="{{item.id}}">去付款</view>

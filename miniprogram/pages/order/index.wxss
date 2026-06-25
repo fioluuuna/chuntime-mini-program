@@ -133,17 +133,17 @@
   flex-shrink: 0;
 }
 
-.status-待付款 {
+.status-pending-payment {
   background: #fff0db;
   color: #c26b1a;
 }
 
-.status-待确认 {
+.status-pending-confirm {
   background: #eef4ff;
   color: #3d62a8;
 }
 
-.status-已完成 {
+.status-completed {
   background: #eef6ef;
   color: #35613d;
 }

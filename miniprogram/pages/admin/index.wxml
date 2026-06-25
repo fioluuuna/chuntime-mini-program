@@ -49,7 +49,7 @@
           <view class="muted mt-8">{{item.fulfillmentType}} · {{item.address}}</view>
           <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
         </view>
-        <view class="status-pill status-pill-{{item.status}}">{{item.status}}</view>
+        <view class="status-pill status-pill-{{item.statusClass}}">{{item.status}}</view>
       </view>
       <view class="status-actions mt-16">
         <view wx:if="{{item.status === '待付款'}}" class="status-btn">等待顾客付款</view>
@@ -87,7 +87,7 @@
           <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
           <view class="muted mt-8">{{item.status}}</view>
         </view>
-        <view class="status-pill status-pill-{{item.status}}">{{item.status}}</view>
+        <view class="status-pill status-pill-{{item.statusClass}}">{{item.status}}</view>
       </view>
       <view class="supply-controls mt-16">
         <view class="control-group">

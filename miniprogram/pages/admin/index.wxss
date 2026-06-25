@@ -93,23 +93,23 @@
   flex-shrink: 0;
 }
 
-.status-pill-待付款 {
+.status-pill-pending-payment {
   background: #fff0db;
   color: #be6719;
 }
 
-.status-pill-待确认 {
+.status-pill-pending-confirm {
   background: #eef4ff;
   color: #3d62a8;
 }
 
-.status-pill-已完成,
-.status-pill-正常 {
+.status-pill-completed,
+.status-pill-normal {
   background: #eef6ef;
   color: #35613d;
 }
 
-.status-pill-需补货 {
+.status-pill-warning {
   background: #ffe2de;
   color: #c84733;
 }

@@ -9,6 +9,36 @@ const {
 } = require("../../utils/api")
 const { hasOwnerSession, clearOwnerSession } = require("../../utils/state")
 
+function getStatusClass(status) {
+  switch (status) {
+    case "待付款":
+      return "pending-payment"
+    case "待确认":
+      return "pending-confirm"
+    case "已完成":
+      return "completed"
+    case "需补货":
+      return "warning"
+    case "正常":
+    default:
+      return "normal"
+  }
+}
+
+function mapSupply(item) {
+  return {
+    ...item,
+    statusClass: getStatusClass(item.status),
+  }
+}
+
+function mapOrder(item) {
+  return {
+    ...item,
+    statusClass: getStatusClass(item.status),
+  }
+}
+
 Page({
   data: {
     summaryCards: [],
@@ -41,11 +71,11 @@ Page({
       this.setData({
         summaryCards: dashboard.summaryCards,
         stocks: dashboard.stocks,
-        supplies,
-        supplyAlerts: dashboard.supplyAlerts || [],
+        supplies: supplies.map(mapSupply),
+        supplyAlerts: (dashboard.supplyAlerts || []).map(mapSupply),
         reportText: dashboard.reportText,
         analytics: dashboard.analytics || this.data.analytics,
-        orders
+        orders: orders.map(mapOrder)
       })
       this.applyOrderFilter()
     } catch (error) {

@@ -10,6 +10,26 @@ const {
   addOwnedOrderId
 } = require("../../utils/state")
 
+function getOrderStatusClass(status) {
+  switch (status) {
+    case "待付款":
+      return "pending-payment"
+    case "待确认":
+      return "pending-confirm"
+    case "已完成":
+      return "completed"
+    default:
+      return "normal"
+  }
+}
+
+function mapMyOrder(item) {
+  return {
+    ...item,
+    statusClass: getOrderStatusClass(item.status),
+  }
+}
+
 Page({
   data: {
     shop: catalog.shop,
@@ -37,7 +57,7 @@ Page({
     const ownedIds = getOwnedOrderIds()
     this.setData({
       shop: { ...this.data.shop, ...config },
-      myOrders: orders.filter((item) => ownedIds.includes(item.id)),
+      myOrders: orders.filter((item) => ownedIds.includes(item.id)).map(mapMyOrder),
       serviceMode: getServiceMode(),
     })
     this.refreshCart()
