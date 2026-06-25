@@ -2,10 +2,11 @@
   position: relative;
   overflow: hidden;
   padding: 0;
+  border-radius: 32rpx;
 }
 
 .hero-image {
-  height: 360rpx;
+  height: 420rpx;
 }
 
 .hero-mask {
@@ -24,7 +25,7 @@
 }
 
 .hero-title {
-  font-size: 42rpx;
+  font-size: 44rpx;
   font-weight: 800;
   letter-spacing: 2rpx;
 }
@@ -32,40 +33,39 @@
 .hero-subtitle {
   margin-top: 10rpx;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .hero-pills {
   margin-top: 16rpx;
 }
 
-.shortcut {
-  min-height: 148rpx;
+.quick-grid {
+  gap: 22rpx;
 }
 
-.shortcut-title {
-  font-size: 30rpx;
+.quick-item {
+  background: linear-gradient(180deg, #fff9f1, #f8efe4);
+  border-radius: 24rpx;
+  padding: 20rpx;
+}
+
+.quick-title {
+  margin-top: 16rpx;
+  font-size: 28rpx;
   font-weight: 700;
 }
 
-.shortcut-desc {
+.quick-desc {
   margin-top: 8rpx;
   color: #7b6d60;
-  font-size: 24rpx;
+  font-size: 22rpx;
   line-height: 1.45;
 }
 
-.feature-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid #f0ebe5;
-}
-
-.feature-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.feature-card {
+  margin-bottom: 18rpx;
 }
 
 .feature-label {
@@ -104,4 +104,3 @@
 .route-preview {
   border: 1rpx solid #efe6da;
 }
-

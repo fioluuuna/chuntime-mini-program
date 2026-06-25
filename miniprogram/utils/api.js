@@ -1,4 +1,8 @@
+const localDb = require("./local-db")
+
 const BASE_URL = "http://127.0.0.1:3007/api"
+
+let serviceMode = "remote"
 
 function request(path, options = {}) {
   return new Promise((resolve, reject) => {
@@ -12,10 +16,13 @@ function request(path, options = {}) {
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          serviceMode = "remote"
           resolve(res.data)
           return
         }
-        reject(new Error(res.data?.error || `Request failed: ${res.statusCode}`))
+        const error = new Error(res.data?.error || `Request failed: ${res.statusCode}`)
+        error.statusCode = res.statusCode
+        reject(error)
       },
       fail(err) {
         reject(err)
@@ -24,53 +31,81 @@ function request(path, options = {}) {
   })
 }
 
+async function withFallback(remoteTask, localTask) {
+  try {
+    return await remoteTask()
+  } catch (error) {
+    if (error && error.statusCode) {
+      throw error
+    }
+    serviceMode = "local"
+    return localTask(error)
+  }
+}
+
 function getConfig() {
-  return request("/config")
+  return withFallback(() => request("/config"), () => localDb.getConfig())
 }
 
 function getProducts() {
-  return request("/products")
+  return withFallback(() => request("/products"), () => localDb.getProducts())
 }
 
 function updateProductStock(productId, stock) {
-  return request(`/products/${productId}`, {
-    method: "PATCH",
-    data: { stock }
-  })
+  return withFallback(
+    () =>
+      request(`/products/${productId}`, {
+        method: "PATCH",
+        data: { stock }
+      }),
+    () => localDb.updateProductStock(productId, stock)
+  )
 }
 
 function getOrders() {
-  return request("/orders")
+  return withFallback(() => request("/orders"), () => localDb.getOrders())
 }
 
 function createOrder(payload) {
-  return request("/orders", {
-    method: "POST",
-    data: payload
-  })
+  return withFallback(
+    () =>
+      request("/orders", {
+        method: "POST",
+        data: payload
+      }),
+    () => localDb.createOrder(payload)
+  )
 }
 
 function updateOrderStatus(orderId, status) {
-  return request(`/orders/${orderId}`, {
-    method: "PATCH",
-    data: { status }
-  })
+  return withFallback(
+    () =>
+      request(`/orders/${orderId}`, {
+        method: "PATCH",
+        data: { status }
+      }),
+    () => localDb.updateOrderStatus(orderId, status)
+  )
 }
 
 function getMember() {
-  return request("/member")
+  return withFallback(() => request("/member"), () => localDb.getMember())
 }
 
 function getDashboard() {
-  return request("/dashboard")
+  return withFallback(() => request("/dashboard"), () => localDb.getDashboard())
 }
 
 function resetDemo() {
-  return request("/reset-demo", { method: "POST" })
+  return withFallback(
+    () => request("/reset-demo", { method: "POST" }),
+    () => Promise.resolve({ ok: true, store: localDb.resetStore() })
+  )
 }
 
 module.exports = {
   BASE_URL,
+  request,
   getConfig,
   getProducts,
   updateProductStock,
@@ -79,5 +114,8 @@ module.exports = {
   updateOrderStatus,
   getMember,
   getDashboard,
-  resetDemo
+  resetDemo,
+  getServiceMode() {
+    return serviceMode
+  }
 }

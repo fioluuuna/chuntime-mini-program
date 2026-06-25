@@ -1,8 +1,17 @@
 <view class="page">
   <view class="card member-card">
-    <view class="title">我的会员</view>
-    <view class="subtitle">你的长期复购，会被系统记住</view>
+    <view class="section-head">
+      <view>
+        <view class="title member-title">我的</view>
+        <view class="subtitle member-subtitle">积分、券包、储值和复购成长都在这里</view>
+      </view>
+      <view class="tag light-tag">{{serviceMode === 'local' ? '演示模式' : '联调模式'}}</view>
+    </view>
     <view class="member-level">{{membership}}</view>
+    <view class="muted light-text mt-8">累计下单 {{orderCount}} 次 · {{nextLevelTip}}</view>
+    <view class="growth-bar mt-20">
+      <view class="growth-inner" style="width: {{growthPercent}}%;"></view>
+    </view>
   </view>
 
   <view class="grid-2">
@@ -14,7 +23,27 @@
     <view class="card stat-card">
       <view class="section-title">储值余额</view>
       <view class="stat-value">¥{{balance}}</view>
-      <view class="muted">可用于下单结算</view>
+      <view class="muted">后续可用于下单结算</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">会员权益</view>
+    <view wx:for="{{benefitCards}}" wx:key="title" class="benefit-item">
+      <view class="benefit-title">{{item.title}}</view>
+      <view class="muted mt-8">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">充值活动</view>
+    <view wx:for="{{rechargePlans}}" wx:key="id" class="recharge-item">
+      <view>
+        <view class="coupon-title">{{item.title}}</view>
+        <view class="muted mt-8">{{item.desc}}</view>
+        <view class="muted mt-8">{{item.extra}}</view>
+      </view>
+      <view class="btn btn-ghost" bindtap="showPlanInfo" data-id="{{item.id}}">查看</view>
     </view>
   </view>
 

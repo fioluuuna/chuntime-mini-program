@@ -2,15 +2,39 @@
   "miniprogramRoot": "miniprogram/",
   "projectname": "炖时光微信小程序",
   "description": "炖时光门店点单、库存、会员和店长管理",
-  "appid": "touristappid",
+  "appid": "wx9ea47b2a3f2dde93",
   "setting": {
     "urlCheck": false,
     "es6": true,
     "postcss": true,
     "minified": false,
     "newFeature": true,
-    "compileHotReLoad": true
+    "compileHotReLoad": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
-  "compileType": "miniprogram"
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }
-

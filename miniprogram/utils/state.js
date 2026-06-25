@@ -26,6 +26,7 @@ function addCartItem({
   productId,
   productName,
   price,
+  originalPrice,
   image,
   category,
   quantity = 1,
@@ -35,12 +36,17 @@ function addCartItem({
   const index = cart.findIndex((item) => item.productId === productId)
   if (index >= 0) {
     cart[index].quantity += quantity
+    cart[index].originalPrice = cart[index].originalPrice || originalPrice || price
+    if (parts.length) {
+      cart[index].parts = parts
+    }
   } else {
     cart.push({
       id: `cart-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       productId,
       productName,
       price,
+      originalPrice,
       image,
       category,
       quantity,
@@ -76,10 +82,10 @@ function calculateCartTotals(cart, discountRate, deliveryFee, fulfillmentType = 
   const total = Math.round((discountedSubtotal + shipping) * 100) / 100
   const originalSubtotal = cart.reduce((sum, item) => {
     if (item.parts?.length) {
-      const partSum = item.parts.reduce((partTotal, part) => partTotal + part.originalPrice * part.quantity, 0)
+      const partSum = item.parts.reduce((partTotal, part) => partTotal + (part.originalPrice || 0) * part.quantity, 0)
       return sum + partSum * item.quantity
     }
-    return sum + item.originalPrice * item.quantity
+    return sum + (item.originalPrice || item.price) * item.quantity
   }, 0)
   return {
     subtotal: Math.round(originalSubtotal * 100) / 100,
@@ -100,4 +106,3 @@ module.exports = {
   clearCart,
   calculateCartTotals
 }
-

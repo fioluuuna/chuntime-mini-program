@@ -42,24 +42,77 @@ function readJson(req) {
 
 function buildDashboard(store) {
   const totalRevenue = store.orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0)
-  const preorderCount = store.orders.filter((order) => order.status === "待接单").length
+  const preorderCount = store.orders.filter((order) => order.status !== "已完成").length
+  const soupMap = {}
+  const hourMap = {}
+  const customerMap = {}
+
+  for (const order of store.orders) {
+    const match = String(order.createdAt || "").match(/(\d{1,2}):\d{2}/)
+    const hourLabel = match
+      ? `${String(Number(match[1])).padStart(2, "0")}:00-${String(Number(match[1]) + 1).padStart(2, "0")}:00`
+      : "未知时段"
+    hourMap[hourLabel] = (hourMap[hourLabel] || 0) + 1
+
+    const customerKey = order.phone || order.name
+    customerMap[customerKey] = customerMap[customerKey] || {
+      name: order.name || "顾客",
+      phone: order.phone || "",
+      count: 0,
+      amount: 0
+    }
+    customerMap[customerKey].count += 1
+    customerMap[customerKey].amount += Number(order.totals?.total || 0)
+
+    for (const item of order.items || []) {
+      if (item.parts?.length) {
+        const soupPart = item.parts.find((part) => String(part.productId).startsWith("soup-"))
+        if (soupPart) {
+          soupMap[soupPart.productName] = (soupMap[soupPart.productName] || 0) + item.quantity
+        }
+      } else if (String(item.productId).startsWith("soup-")) {
+        soupMap[item.productName] = (soupMap[item.productName] || 0) + item.quantity
+      }
+    }
+  }
+
   return {
     summaryCards: [
-      { label: "今日订单", value: store.orders.length },
-      { label: "今日销售额", value: `¥${totalRevenue.toFixed(2)}` },
-      { label: "预订占用", value: preorderCount },
-      { label: "现可售库存", value: store.products.reduce((sum, item) => sum + item.stock, 0) }
+      { label: "累计订单", value: store.orders.length },
+      { label: "累计销售额", value: `¥${totalRevenue.toFixed(2)}` },
+      { label: "待处理订单", value: preorderCount },
+      { label: "在售库存", value: store.products.reduce((sum, item) => sum + item.stock, 0) }
     ],
     stocks: store.products
       .filter((item) => item.category === "soup")
       .map((item) => ({
         id: item.id,
         name: item.name,
-        reserved: Math.max(0, Math.min(item.stock, Math.floor(item.stock * 0.35))),
+        reserved: 0,
         stock: item.stock,
-        remaining: item.stock - Math.max(0, Math.min(item.stock, Math.floor(item.stock * 0.35)))
+        remaining: item.stock
       })),
-    reportText: "今日汇总：先看预订，再确认库存，再开放现单。当前后台只做库存确认和售罄控制，不自动推算采购量。"
+    analytics: {
+      topSoups: Object.keys(soupMap)
+        .map((name) => ({ name, count: soupMap[name] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5),
+      topHours: Object.keys(hourMap)
+        .map((hour) => ({ hour, count: hourMap[hour] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5),
+      topCustomers: Object.values(customerMap)
+        .sort((a, b) => {
+          if (b.count !== a.count) return b.count - a.count
+          return b.amount - a.amount
+        })
+        .slice(0, 5)
+        .map((item) => ({
+          ...item,
+          amount: `¥${item.amount.toFixed(2)}`
+        }))
+    },
+    reportText: "先确认库存，再根据当日接单情况手动开售。后台保留数据分析、库存确认和订单流转，不强行做采购推算。"
   }
 }
 

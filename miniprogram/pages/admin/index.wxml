@@ -23,7 +23,7 @@
       <view class="row space-between">
         <view>
           <view class="stock-name">{{item.name}}</view>
-          <view class="muted">预订 {{item.reserved}} · 剩余 {{item.remaining}} / 总 {{item.stock}}</view>
+          <view class="muted">剩余 {{item.remaining}} / 总 {{item.stock}}</view>
         </view>
         <view class="stock-controls">
           <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="-1">-</view>
@@ -37,6 +37,31 @@
     <view class="section-title">手机日报</view>
     <view class="muted">{{reportText}}</view>
     <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">数据分析</view>
+    <view class="analytics-block">
+      <view class="analytics-title">哪个汤最受欢迎</view>
+      <view wx:for="{{analytics.topSoups}}" wx:key="name" class="analytics-row">
+        <text>{{item.name}}</text>
+        <text>{{item.count}} 份</text>
+      </view>
+    </view>
+    <view class="analytics-block">
+      <view class="analytics-title">哪个时段下单最多</view>
+      <view wx:for="{{analytics.topHours}}" wx:key="hour" class="analytics-row">
+        <text>{{item.hour}}</text>
+        <text>{{item.count}} 单</text>
+      </view>
+    </view>
+    <view class="analytics-block">
+      <view class="analytics-title">高复购顾客</view>
+      <view wx:for="{{analytics.topCustomers}}" wx:key="phone" class="analytics-row">
+        <text>{{item.name}}</text>
+        <text>{{item.count}} 单 · {{item.amount}}</text>
+      </view>
+    </view>
   </view>
 
   <view class="card">

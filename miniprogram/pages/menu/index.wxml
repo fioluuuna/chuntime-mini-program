@@ -1,50 +1,120 @@
 <view class="page">
   <view class="card">
-    <image class="image" src="{{poster}}" mode="widthFix" bindtap="previewPoster"></image>
-    <view class="mt-16">
-      <view class="section-title">开业活动</view>
+    <view class="section-head">
+      <view>
+        <view class="title">点单</view>
+        <view class="subtitle">汤品、面食、套餐合并点单，不用再备注组合</view>
+      </view>
+      <view class="tag">{{serviceMode === 'local' ? '演示模式' : '联调模式'}}</view>
+    </view>
+    <image class="image menu-poster" src="{{poster}}" mode="widthFix" bindtap="previewPoster"></image>
+    <view class="notice-strip mt-16">
       <view class="muted">{{shop.openingDiscountText}}</view>
       <view class="muted mt-8">营业时间 {{shop.hours}} · 配送 {{shop.deliveryAreas[0]}} / {{shop.deliveryAreas[1]}} / {{shop.deliveryAreas[2]}}</view>
     </view>
   </view>
 
-  <view class="card">
-    <view class="row space-between mb-16">
-      <view class="section-title">汤品</view>
-      <view class="muted">点击加购，直接进入订单</view>
-    </view>
-    <view wx:for="{{soups}}" wx:key="id" class="menu-item">
-      <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
-      <view class="menu-body">
-        <view class="row space-between">
-          <view class="menu-name">{{item.name}}</view>
-          <view class="price">¥{{item.salePrice}}</view>
-        </view>
-        <view class="muted mt-8">{{item.desc}}</view>
-        <view class="muted mt-12">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
-        <view class="mt-12">
-          <view class="btn btn-ghost" bindtap="addSoup" data-id="{{item.id}}">{{item.soldOut ? "已售罄" : "加入购物车"}}</view>
-        </view>
+  <view class="menu-shell">
+    <view class="menu-sidebar">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="category-item {{activeCategory === item.key ? 'category-item-active' : ''}}"
+        bindtap="selectCategory"
+        data-key="{{item.key}}"
+      >
+        {{item.label}}
       </view>
     </view>
-  </view>
 
-  <view class="card">
-    <view class="row space-between mb-16">
-      <view class="section-title">主食面条</view>
-      <view class="muted">也可以单独点</view>
-    </view>
-    <view wx:for="{{noodles}}" wx:key="id" class="menu-item">
-      <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
-      <view class="menu-body">
-        <view class="row space-between">
-          <view class="menu-name">{{item.name}}</view>
-          <view class="price">¥{{item.salePrice}}</view>
+    <view class="menu-content">
+      <view class="card content-card" wx:if="{{activeCategory === 'soup'}}">
+        <view class="section-head">
+          <view class="section-title">今日炖汤</view>
+          <view class="muted">剩余份数可见</view>
         </view>
-        <view class="muted mt-8">{{item.desc}}</view>
-        <view class="muted mt-12">原价 ¥{{item.originalText}}</view>
-        <view class="mt-12">
-          <view class="btn btn-ghost" bindtap="addNoodle" data-id="{{item.id}}">加入购物车</view>
+        <view wx:for="{{soups}}" wx:key="id" class="menu-item">
+          <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="menu-body">
+            <view class="row space-between align-start">
+              <view class="menu-name">{{item.name}}</view>
+              <view class="price">¥{{item.salePriceText}}</view>
+            </view>
+            <view class="muted mt-8">{{item.desc}}</view>
+            <view class="row space-between mt-12">
+              <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
+              <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
+                {{item.soldOut ? '售罄' : '+'}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card content-card" wx:if="{{activeCategory === 'combo'}}">
+        <view class="section-title">自由套餐</view>
+        <view class="muted">先选 1 份汤，再选 1 份面，系统自动算价，避免手写备注。</view>
+
+        <view class="combo-section">
+          <view class="combo-label">先选汤</view>
+          <view class="chip-wrap">
+            <view
+              wx:for="{{soups}}"
+              wx:key="id"
+              class="choice-chip {{selectedSoupId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
+              bindtap="chooseComboSoup"
+              data-id="{{item.id}}"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+
+        <view class="combo-section">
+          <view class="combo-label">再选面</view>
+          <view class="chip-wrap">
+            <view
+              wx:for="{{noodles}}"
+              wx:key="id"
+              class="choice-chip {{selectedNoodleId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
+              bindtap="chooseComboNoodle"
+              data-id="{{item.id}}"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+
+        <view class="soft-panel mt-20" wx:if="{{comboSummary}}">
+          <view class="combo-row"><text>汤品</text><text>{{comboSummary.soup.name}}</text></view>
+          <view class="combo-row"><text>面食</text><text>{{comboSummary.noodle.name}}</text></view>
+          <view class="combo-row"><text>原价</text><text>¥{{comboSummary.originalText}}</text></view>
+          <view class="combo-row"><text>优惠后</text><text class="price">¥{{comboSummary.finalText}}</text></view>
+          <view class="combo-row"><text>立省</text><text>¥{{comboSummary.savingsText}}</text></view>
+          <view class="btn mt-20" bindtap="addCombo">加入套餐</view>
+        </view>
+      </view>
+
+      <view class="card content-card" wx:if="{{activeCategory === 'noodle'}}">
+        <view class="section-head">
+          <view class="section-title">主食面条</view>
+          <view class="muted">也可以单独点</view>
+        </view>
+        <view wx:for="{{noodles}}" wx:key="id" class="menu-item">
+          <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="menu-body">
+            <view class="row space-between align-start">
+              <view class="menu-name">{{item.name}}</view>
+              <view class="price">¥{{item.salePriceText}}</view>
+            </view>
+            <view class="muted mt-8">{{item.desc}}</view>
+            <view class="row space-between mt-12">
+              <view class="muted">原价 ¥{{item.originalText}}</view>
+              <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
+                {{item.soldOut ? '售罄' : '+'}}
+              </view>
+            </view>
+          </view>
         </view>
       </view>
     </view>

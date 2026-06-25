@@ -5,7 +5,12 @@ Page({
     summaryCards: [],
     stocks: [],
     reportText: "",
-    orders: []
+    orders: [],
+    analytics: {
+      topSoups: [],
+      topHours: [],
+      topCustomers: [],
+    }
   },
 
   async onShow() {
@@ -18,7 +23,8 @@ Page({
       this.setData({
         summaryCards: dashboard.summaryCards,
         stocks: dashboard.stocks,
-        reportText: dashboard.reportText
+        reportText: dashboard.reportText,
+        analytics: dashboard.analytics || this.data.analytics
       })
       const orders = await getOrders()
       this.setData({ orders })

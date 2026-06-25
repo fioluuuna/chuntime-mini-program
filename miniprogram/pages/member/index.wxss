@@ -3,10 +3,34 @@
   color: #fff;
 }
 
+.member-title,
+.member-subtitle,
+.light-text {
+  color: #fff;
+}
+
+.light-tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
 .member-level {
   margin-top: 20rpx;
   font-size: 38rpx;
   font-weight: 700;
+}
+
+.growth-bar {
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.24);
+  overflow: hidden;
+}
+
+.growth-inner {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #f5d798;
 }
 
 .stat-value {
@@ -15,12 +39,16 @@
   margin: 12rpx 0;
 }
 
-.coupon-item {
+.benefit-item,
+.coupon-item,
+.recharge-item {
   padding: 18rpx 0;
   border-bottom: 1rpx solid #f2ebe3;
 }
 
-.coupon-item:last-child {
+.benefit-item:last-child,
+.coupon-item:last-child,
+.recharge-item:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
@@ -28,4 +56,16 @@
 .coupon-title {
   font-size: 28rpx;
   font-weight: 700;
+}
+
+.benefit-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.recharge-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
 }

@@ -1,12 +1,16 @@
 const { catalog, toPriceText } = require("../../utils/pricing")
-const { getOrders, createOrder, getConfig } = require("../../utils/api")
+const { getOrders, createOrder, getConfig, getServiceMode } = require("../../utils/api")
 const { ensureState, getCart, updateCartQuantity, clearCart, calculateCartTotals } = require("../../utils/state")
 
 Page({
   data: {
     shop: catalog.shop,
+    serviceMode: "remote",
     cart: [],
     orders: [],
+    filteredOrders: [],
+    orderFilter: "全部",
+    areaOptions: ["金山谷", "保利", "意库"],
     fulfillmentType: "配送",
     customerName: "顾客",
     phone: "",
@@ -24,16 +28,14 @@ Page({
   async onShow() {
     ensureState()
     let config = this.data.shop
-    let orders = []
-    try {
-      ;[config, orders] = await Promise.all([getConfig(), getOrders()])
-    } catch (error) {
-      wx.showToast({ title: "后端未连接，订单提交不可用", icon: "none" })
-    }
+    const orders = await getOrders()
+    config = await getConfig()
     this.setData({
       shop: { ...this.data.shop, ...config },
-      orders
+      orders,
+      serviceMode: getServiceMode(),
     })
+    this.applyOrderFilter()
     this.refreshCart()
   },
 
@@ -53,6 +55,15 @@ Page({
     })
   },
 
+  applyOrderFilter() {
+    const filter = this.data.orderFilter
+    const filteredOrders = this.data.orders.filter((item) => {
+      if (filter === "全部") return true
+      return item.fulfillmentType === filter
+    })
+    this.setData({ filteredOrders })
+  },
+
   plusItem(e) {
     updateCartQuantity(e.currentTarget.dataset.id, 1)
     this.refreshCart()
@@ -64,13 +75,30 @@ Page({
   },
 
   changeFulfillment(e) {
-    this.setData({ fulfillmentType: e.detail.value })
+    const fulfillmentType = e.detail.value
+    this.setData({
+      fulfillmentType,
+      address: fulfillmentType === "自提" ? "到店自取" : this.data.address === "到店自取" ? "意库" : this.data.address
+    })
     this.refreshCart()
   },
 
   bindInput(e) {
     const field = e.currentTarget.dataset.field
     this.setData({ [field]: e.detail.value })
+  },
+
+  chooseArea(e) {
+    this.setData({ address: e.currentTarget.dataset.area })
+  },
+
+  changeOrderFilter(e) {
+    this.setData({ orderFilter: e.currentTarget.dataset.filter })
+    this.applyOrderFilter()
+  },
+
+  goMenu() {
+    wx.switchTab({ url: "/pages/menu/index" })
   },
 
   async submitOrder() {
@@ -96,10 +124,10 @@ Page({
       wx.showToast({ title: "下单成功", icon: "success" })
       const orders = await getOrders()
       this.setData({ orders, remark: "" })
+      this.applyOrderFilter()
       this.refreshCart()
     } catch (error) {
       wx.showToast({ title: error.message || "下单失败", icon: "none" })
     }
   }
 })
-

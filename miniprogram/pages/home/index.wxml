@@ -1,50 +1,61 @@
 <view class="page">
+  <view class="notice-bar">
+    <view class="notice-icon">播报</view>
+    <view class="muted">开业活动全场 88 折，营业时间 {{shop.hours}}，现点现做，支持配送和自提。</view>
+  </view>
+
   <view class="card hero">
     <image class="image hero-image" src="{{menuPoster}}" mode="aspectFill"></image>
     <view class="hero-mask"></view>
     <view class="hero-content">
       <view class="hero-title">{{shop.name}}</view>
-      <view class="hero-subtitle">把时间炖进汤里，慢下来，才是时光</view>
+      <view class="hero-subtitle">把时间炖进汤里，给每一份外卖一点慢慢煨出来的温度</view>
       <view class="hero-pills">
         <text class="pill">{{shop.hours}}</text>
         <text class="pill">{{shop.openingDiscountText}}</text>
-        <text class="pill">当前订单 {{orderCount}}</text>
-        <text class="pill">可售商品 {{availableCount}}</text>
+        <text class="pill">可售商品 {{availableCount}} 款</text>
+        <text class="pill">{{serviceMode === 'local' ? '当前为演示模式' : '当前为正式联调模式'}}</text>
       </view>
     </view>
   </view>
 
-  <view class="grid-2">
-    <view class="card shortcut" bindtap="goTo" data-page="menu">
-      <view class="shortcut-title">今日菜单</view>
-      <view class="shortcut-desc">看汤品、面品、折扣和库存</view>
-    </view>
-    <view class="card shortcut" bindtap="goTo" data-page="combo">
-      <view class="shortcut-title">组合套餐</view>
-      <view class="shortcut-desc">汤和面分别选，系统自动计价</view>
-    </view>
-    <view class="card shortcut" bindtap="goTo" data-page="member">
-      <view class="shortcut-title">会员中心</view>
-      <view class="shortcut-desc">积分、储值、优惠券都在这里</view>
-    </view>
-    <view class="card shortcut" bindtap="goTo" data-page="store">
-      <view class="shortcut-title">门店路线</view>
-      <view class="shortcut-desc">路线图、电话、营业时间一眼看到</view>
+  <view class="card">
+    <view class="grid-2 quick-grid">
+      <view class="quick-item" bindtap="goTo" data-page="menu">
+        <view class="icon-circle">点</view>
+        <view class="quick-title">开始点单</view>
+        <view class="quick-desc">汤品、面食、套餐合并点</view>
+      </view>
+      <view class="quick-item" bindtap="goTo" data-page="order">
+        <view class="icon-circle">单</view>
+        <view class="quick-title">查看订单</view>
+        <view class="quick-desc">看购物车和下单记录</view>
+      </view>
+      <view class="quick-item" bindtap="goTo" data-page="member">
+        <view class="icon-circle">会</view>
+        <view class="quick-title">会员权益</view>
+        <view class="quick-desc">积分、储值、老客券包</view>
+      </view>
+      <view class="quick-item" bindtap="goTo" data-page="admin">
+        <view class="icon-circle">店</view>
+        <view class="quick-title">店长后台</view>
+        <view class="quick-desc">库存、订单、数据分析</view>
+      </view>
     </view>
   </view>
 
   <view class="card">
-    <view class="section-title">今天为什么更方便</view>
-    <view wx:for="{{highlights}}" wx:key="label" class="feature-row">
-      <view class="feature-label">{{item.label}}</view>
-      <view class="muted">{{item.value}}</view>
+    <view class="section-title">店里想传达的感觉</view>
+    <view wx:for="{{featuredCards}}" wx:key="title" class="soft-panel feature-card">
+      <view class="feature-label">{{item.title}}</view>
+      <view class="muted mt-8">{{item.desc}}</view>
     </view>
   </view>
 
   <view class="card">
-    <view class="row space-between mb-16">
+    <view class="section-head">
       <view class="section-title">热卖汤品</view>
-      <view class="muted">88 折后价格自动显示</view>
+      <view class="muted">折后价已自动显示</view>
     </view>
     <view wx:for="{{soups}}" wx:key="id" class="soup-row">
       <image class="soup-image" src="{{item.image}}" mode="aspectFill"></image>
@@ -54,22 +65,23 @@
           <view class="price">¥{{item.salePrice}}</view>
         </view>
         <view class="muted mt-8">{{item.desc}}</view>
-        <view class="muted mt-12">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
+        <view class="muted mt-12">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
       </view>
     </view>
+    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点单</view>
   </view>
 
   <view class="card">
-    <view class="row space-between mb-12">
+    <view class="section-head">
       <view class="section-title">怎么找到我们</view>
-      <view class="btn btn-ghost" bindtap="goTo" data-page="store">看路线图</view>
+      <view class="tag">意库 66 栋</view>
     </view>
     <image class="image route-preview" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
-    <view class="muted mt-16">意库66栋，暖心素火锅隔壁。点开可放大查看路线。</view>
-  </view>
-
-  <view class="grid-2">
-    <view class="btn" bindtap="goTo" data-page="order">查看订单</view>
-    <view class="btn btn-ghost" bindtap="goTo" data-page="admin">店长后台</view>
+    <view class="muted mt-16">位置在意库 66 栋，暖心素火锅隔壁。点开图片可放大查看路线。</view>
+    <view class="muted mt-8">地址：{{shop.address}}</view>
+    <view class="grid-2 mt-20">
+      <view class="btn btn-ghost" bindtap="copyAddress">复制地址</view>
+      <view class="btn" bindtap="callShop">拨打电话</view>
+    </view>
   </view>
 </view>
