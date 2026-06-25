@@ -1,5 +1,5 @@
 const { catalog, toPriceText } = require("../../utils/pricing")
-const { getOrders, createOrder, getConfig, getServiceMode } = require("../../utils/api")
+const { getOrders, createOrder, getConfig } = require("../../utils/api")
 const {
   ensureState,
   getCart,
@@ -7,38 +7,42 @@ const {
   clearCart,
   calculateCartTotals,
   getOwnedOrderIds,
-  addOwnedOrderId
+  addOwnedOrderId,
 } = require("../../utils/state")
 
-function getOrderStatusClass(status) {
+function getOrderStatusText(status) {
   switch (status) {
-    case "待付款":
-      return "pending-payment"
-    case "待确认":
-      return "pending-confirm"
-    case "已完成":
-      return "completed"
+    case "pending_payment":
+      return "待付款"
+    case "pending_confirm":
+      return "待确认"
+    case "completed":
+      return "已完成"
     default:
-      return "normal"
+      return "处理中"
   }
+}
+
+function getFulfillmentText(type) {
+  return type === "pickup" ? "自提" : "配送"
 }
 
 function mapMyOrder(item) {
   return {
     ...item,
-    statusClass: getOrderStatusClass(item.status),
+    statusText: getOrderStatusText(item.status),
+    fulfillmentText: getFulfillmentText(item.fulfillmentType),
   }
 }
 
 Page({
   data: {
     shop: catalog.shop,
-    serviceMode: "remote",
     cart: [],
     myOrders: [],
     areaOptions: ["金山谷", "保利", "意库"],
-    fulfillmentType: "配送",
-    customerName: "顾客",
+    fulfillmentType: "delivery",
+    customerName: "",
     phone: "",
     address: "意库",
     remark: "",
@@ -47,25 +51,37 @@ Page({
       discountedSubtotal: 0,
       shipping: 0,
       total: 0,
-      savings: 0
-    }
+      savings: 0,
+    },
   },
 
   async onShow() {
     ensureState()
-    const [config, orders] = await Promise.all([getConfig(), getOrders()])
+    let config = this.data.shop
+    let orders = []
+
+    try {
+      ;[config, orders] = await Promise.all([getConfig(), getOrders()])
+    } catch (error) {
+      orders = []
+    }
+
     const ownedIds = getOwnedOrderIds()
     this.setData({
       shop: { ...this.data.shop, ...config },
       myOrders: orders.filter((item) => ownedIds.includes(item.id)).map(mapMyOrder),
-      serviceMode: getServiceMode(),
     })
     this.refreshCart()
   },
 
   refreshCart() {
     const cart = getCart()
-    const totals = calculateCartTotals(cart, this.data.shop.discountRate, this.data.shop.deliveryFee, this.data.fulfillmentType)
+    const totals = calculateCartTotals(
+      cart,
+      this.data.shop.discountRate,
+      this.data.shop.deliveryFee,
+      this.data.fulfillmentType
+    )
     this.setData({
       cart,
       totals: {
@@ -74,8 +90,8 @@ Page({
         shippingText: toPriceText(totals.shipping),
         totalText: toPriceText(totals.total),
         savingsText: toPriceText(totals.savings),
-        ...totals
-      }
+        ...totals,
+      },
     })
   },
 
@@ -93,7 +109,7 @@ Page({
     const fulfillmentType = e.detail.value
     this.setData({
       fulfillmentType,
-      address: fulfillmentType === "自提" ? "到店自取" : this.data.address === "到店自取" ? "意库" : this.data.address
+      address: fulfillmentType === "pickup" ? "到店自取" : this.data.address === "到店自取" ? "意库" : this.data.address,
     })
     this.refreshCart()
   },
@@ -121,8 +137,16 @@ Page({
       wx.showToast({ title: "购物车还是空的", icon: "none" })
       return
     }
+    if (!this.data.customerName) {
+      wx.showToast({ title: "请先填写联系人", icon: "none" })
+      return
+    }
     if (!this.data.phone) {
       wx.showToast({ title: "请先填写手机号", icon: "none" })
+      return
+    }
+    if (!this.data.address) {
+      wx.showToast({ title: "请先填写配送地址", icon: "none" })
       return
     }
     try {
@@ -133,15 +157,20 @@ Page({
         address: this.data.address,
         remark: this.data.remark,
         items: this.data.cart,
-        totals: this.data.totals
+        totals: this.data.totals,
       })
       addOwnedOrderId(order.id)
       clearCart()
-      wx.navigateTo({ url: `/pages/payment/index?orderId=${order.id}` })
-      this.setData({ remark: "" })
+      this.setData({
+        customerName: "",
+        phone: "",
+        address: this.data.fulfillmentType === "pickup" ? "到店自取" : "意库",
+        remark: "",
+      })
       this.refreshCart()
+      wx.navigateTo({ url: `/pages/payment/index?orderId=${order.id}` })
     } catch (error) {
       wx.showToast({ title: error.message || "下单失败", icon: "none" })
     }
-  }
+  },
 })

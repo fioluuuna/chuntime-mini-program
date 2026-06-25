@@ -19,7 +19,7 @@ Page({
 
   async submit() {
     if (!this.data.code) {
-      wx.showToast({ title: "请输入店长口令", icon: "none" })
+      wx.showToast({ title: "请输入店长密码", icon: "none" })
       return
     }
     this.setData({ loading: true })
@@ -32,5 +32,5 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
-  }
+  },
 })

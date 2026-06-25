@@ -1,20 +1,25 @@
 <view class="page">
   <view class="notice-bar">
-    <view class="notice-icon">播报</view>
-    <view class="muted">开业活动全场 88 折，营业时间 {{shop.hours}}，现点现做，支持配送和自提。</view>
+    <view class="notice-icon">营业中</view>
+    <view class="muted">开业活动全场 88 折，营业时间 {{shop.hours}}，支持配送和到店自提。</view>
   </view>
 
   <view class="card hero">
     <image class="image hero-image" src="{{heroImage}}" mode="aspectFill"></image>
     <view class="hero-mask"></view>
     <view class="hero-content">
-      <view class="hero-title">{{shop.name}}</view>
-      <view class="hero-subtitle">把时间炖进汤里，给每一份外卖一点慢慢煨出来的温度</view>
+      <view class="hero-logo-area" bindtap="handleLogoTap">
+        <view class="hero-title">{{shop.name}}</view>
+        <view class="hero-subtitle">把时间炖进汤里，让每一份外卖都像刚从灶边端出来。</view>
+      </view>
       <view class="hero-pills">
         <text class="pill">{{shop.hours}}</text>
         <text class="pill">{{shop.openingDiscountText}}</text>
-        <text class="pill">可售商品 {{availableCount}} 款</text>
-        <text class="pill">{{serviceMode === 'local' ? '当前为演示模式' : '当前为正式联调模式'}}</text>
+        <text class="pill">当前可点 {{availableCount}} 款</text>
+      </view>
+      <view class="hero-actions">
+        <view class="btn" bindtap="goTo" data-page="menu">马上点一单</view>
+        <view class="btn btn-ghost hero-ghost" bindtap="goTo" data-page="order">查看订单</view>
       </view>
     </view>
   </view>
@@ -24,24 +29,65 @@
       <view class="quick-item" bindtap="goTo" data-page="menu">
         <view class="icon-circle">点</view>
         <view class="quick-title">开始点单</view>
-        <view class="quick-desc">汤品、面食、套餐合并点</view>
-      </view>
-      <view class="quick-item" bindtap="goTo" data-page="order">
-        <view class="icon-circle">单</view>
-        <view class="quick-title">查看订单</view>
-        <view class="quick-desc">看购物车和下单记录</view>
+        <view class="quick-desc">炖汤、面食、套餐都能直接选，不用再手写备注。</view>
       </view>
       <view class="quick-item" bindtap="goTo" data-page="member">
-        <view class="icon-circle">会</view>
+        <view class="icon-circle">享</view>
         <view class="quick-title">会员权益</view>
-        <view class="quick-desc">积分、储值、老客券包</view>
+        <view class="quick-desc">积分抵扣、老客券、充值活动都放在这里。</view>
+      </view>
+      <view class="quick-item" bindtap="copyAddress">
+        <view class="icon-circle">路</view>
+        <view class="quick-title">复制地址</view>
+        <view class="quick-desc">位置在意库 66 栋，暖心素火锅隔壁。</view>
       </view>
       <view class="quick-item" bindtap="previewQr">
         <view class="icon-circle">联</view>
         <view class="quick-title">联系店长</view>
-        <view class="quick-desc">可扫码添加微信咨询或售后</view>
+        <view class="quick-desc">售后、改单、咨询配送都可以直接扫码联系。</view>
       </view>
     </view>
+  </view>
+
+  <view class="card">
+    <view class="section-head">
+      <view class="section-title">怎么找到我们</view>
+      <view class="tag">意库 66 栋</view>
+    </view>
+    <image class="image route-preview" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
+    <view class="muted mt-16">按路线图往前直走，暖心素火锅旁边就是店门口。点开图片可以放大查看。</view>
+    <view class="muted mt-8">地址：{{shop.address}}</view>
+    <view class="grid-2 mt-20">
+      <view class="btn btn-ghost" bindtap="copyAddress">复制地址</view>
+      <view class="btn" bindtap="callShop">拨打电话</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-head">
+      <view class="section-title">热卖汤品</view>
+      <view class="muted">看到喜欢的直接去点单</view>
+    </view>
+    <scroll-view class="hot-scroll" scroll-x enhanced show-scrollbar="false">
+      <view class="hot-list">
+        <view wx:for="{{hotSoups}}" wx:key="id" class="hot-card">
+          <image class="hot-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="hot-badge">{{item.hotLabel}}</view>
+          <view class="hot-body">
+            <view class="hot-name">{{item.name}}</view>
+            <view class="muted mt-8 hot-desc">{{item.desc}}</view>
+            <view class="row space-between mt-16 align-start">
+              <view>
+                <view class="price">¥{{item.salePriceText}}</view>
+                <view class="muted mt-8">原价 ¥{{item.originalText}}</view>
+              </view>
+              <view class="stock-note">{{item.stock}} 份可点</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点单</view>
   </view>
 
   <view class="card">
@@ -52,53 +98,21 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="section-head">
-      <view class="section-title">菜单海报</view>
-      <view class="muted">可放大查看完整价格</view>
+  <view class="mask" wx:if="{{showOwnerModal}}" bindtap="closeOwnerModal"></view>
+  <view class="owner-modal" wx:if="{{showOwnerModal}}">
+    <view class="owner-title">店长验证</view>
+    <view class="muted mt-12">请输入店长密码后进入后台。</view>
+    <input
+      class="input owner-input"
+      password
+      value="{{ownerCode}}"
+      bindinput="bindOwnerCode"
+      placeholder="请输入密码"
+      placeholder-class="field-placeholder"
+    />
+    <view class="owner-actions">
+      <view class="btn btn-ghost" bindtap="closeOwnerModal">取消</view>
+      <view class="btn" bindtap="confirmOwnerAccess">进入后台</view>
     </view>
-    <image class="image" src="{{menuPoster}}" mode="widthFix"></image>
-  </view>
-
-  <view class="card">
-    <view class="section-head">
-      <view class="section-title">热卖汤品</view>
-      <view class="muted">折后价已自动显示</view>
-    </view>
-    <view wx:for="{{soups}}" wx:key="id" class="soup-row">
-      <image class="soup-image" src="{{item.image}}" mode="aspectFill"></image>
-      <view class="soup-body">
-        <view class="row space-between">
-          <view class="soup-name">{{item.name}}</view>
-          <view class="price">¥{{item.salePrice}}</view>
-        </view>
-        <view class="muted mt-8">{{item.desc}}</view>
-        <view class="muted mt-12">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
-      </view>
-    </view>
-    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点单</view>
-  </view>
-
-  <view class="card">
-    <view class="section-head">
-      <view class="section-title">怎么找到我们</view>
-      <view class="tag">意库 66 栋</view>
-    </view>
-    <image class="image route-preview" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
-    <view class="muted mt-16">位置在意库 66 栋，暖心素火锅隔壁。点开图片可放大查看路线。</view>
-    <view class="muted mt-8">地址：{{shop.address}}</view>
-    <view class="grid-2 mt-20">
-      <view class="btn btn-ghost" bindtap="copyAddress">复制地址</view>
-      <view class="btn" bindtap="callShop">拨打电话</view>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="section-head">
-      <view class="section-title">联系店长</view>
-      <view class="tag">扫码咨询</view>
-    </view>
-    <image class="qr-image" src="{{ownerQrImage}}" mode="widthFix" bindtap="previewQr"></image>
-    <view class="muted mt-12">如需改单、咨询配送或售后，可直接扫码联系店长。</view>
   </view>
 </view>

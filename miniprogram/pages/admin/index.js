@@ -5,37 +5,56 @@ const {
   resetDemo,
   getOrders,
   updateOrderStatus,
-  getSupplies
+  getSupplies,
 } = require("../../utils/api")
 const { hasOwnerSession, clearOwnerSession } = require("../../utils/state")
 
+function getOrderStatusText(status) {
+  switch (status) {
+    case "pending_payment":
+      return "待付款"
+    case "pending_confirm":
+      return "待确认"
+    case "completed":
+      return "已完成"
+    default:
+      return "处理中"
+  }
+}
+
 function getStatusClass(status) {
   switch (status) {
-    case "待付款":
+    case "pending_payment":
       return "pending-payment"
-    case "待确认":
+    case "pending_confirm":
       return "pending-confirm"
-    case "已完成":
+    case "completed":
       return "completed"
-    case "需补货":
+    case "warning":
       return "warning"
-    case "正常":
+    case "normal":
     default:
       return "normal"
   }
 }
 
+function getFulfillmentText(type) {
+  return type === "pickup" ? "自提" : "配送"
+}
+
 function mapSupply(item) {
   return {
     ...item,
-    statusClass: getStatusClass(item.status),
+    statusClass: getStatusClass(item.statusKey),
   }
 }
 
 function mapOrder(item) {
   return {
     ...item,
+    statusText: getOrderStatusText(item.status),
     statusClass: getStatusClass(item.status),
+    fulfillmentText: getFulfillmentText(item.fulfillmentType),
   }
 }
 
@@ -48,18 +67,18 @@ Page({
     reportText: "",
     orders: [],
     visibleOrders: [],
-    orderFilter: "全部",
+    orderFilter: "all",
     activeModule: "orders",
     analytics: {
       topSoups: [],
       topHours: [],
       topCustomers: [],
-    }
+    },
   },
 
   async onShow() {
     if (!hasOwnerSession()) {
-      wx.redirectTo({ url: "/pages/owner-login/index" })
+      wx.switchTab({ url: "/pages/home/index" })
       return
     }
     await this.refresh()
@@ -75,7 +94,7 @@ Page({
         supplyAlerts: (dashboard.supplyAlerts || []).map(mapSupply),
         reportText: dashboard.reportText,
         analytics: dashboard.analytics || this.data.analytics,
-        orders: orders.map(mapOrder)
+        orders: orders.map(mapOrder),
       })
       this.applyOrderFilter()
     } catch (error) {
@@ -86,7 +105,7 @@ Page({
   applyOrderFilter() {
     const filter = this.data.orderFilter
     const visibleOrders = this.data.orders.filter((item) => {
-      if (filter === "全部") return true
+      if (filter === "all") return true
       return item.status === filter
     })
     this.setData({ visibleOrders })
@@ -104,7 +123,7 @@ Page({
   copyReport() {
     wx.setClipboardData({
       data: this.data.reportText,
-      success: () => wx.showToast({ title: "已复制", icon: "success" })
+      success: () => wx.showToast({ title: "已复制", icon: "success" }),
     })
   },
 
@@ -169,6 +188,6 @@ Page({
 
   logout() {
     clearOwnerSession()
-    wx.redirectTo({ url: "/pages/owner-login/index" })
-  }
+    wx.switchTab({ url: "/pages/home/index" })
+  },
 })

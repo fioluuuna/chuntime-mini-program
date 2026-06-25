@@ -1,7 +1,7 @@
 <view class="page">
   <view class="card" wx:if="{{order}}">
     <view class="title">订单待付款</view>
-    <view class="subtitle mt-8">请先扫码转账，再点击“我已付款”，店长核实后会手动确认。</view>
+    <view class="subtitle mt-8">请先扫码转账，再点击“我已付款”，店长核实后会手动确认收款。</view>
     <view class="pill mt-20">{{order.id}}</view>
   </view>
 
@@ -22,9 +22,9 @@
 
   <view class="card" wx:if="{{order}}">
     <view class="section-title">当前状态</view>
-    <view class="status-box">{{order.status}}</view>
-    <view wx:if="{{order.status === '待付款'}}" class="btn mt-20" bindtap="confirmPaid">我已付款</view>
-    <view wx:elif="{{order.status === '待确认'}}" class="muted mt-16">已提交付款通知，请等店长确认收款。</view>
+    <view class="status-box status-box-{{order.status}}">{{statusText}}</view>
+    <view wx:if="{{order.status === 'pending_payment'}}" class="btn mt-20" bindtap="confirmPaid">我已付款</view>
+    <view wx:elif="{{order.status === 'pending_confirm'}}" class="muted mt-16">已提交付款通知，请等店长确认收款。</view>
     <view wx:else class="muted mt-16">店长已确认收款，订单已完成。</view>
     <view class="btn btn-ghost mt-20" bindtap="goOrders">返回订单页</view>
   </view>

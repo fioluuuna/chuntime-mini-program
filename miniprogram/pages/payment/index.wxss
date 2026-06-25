@@ -1,5 +1,5 @@
 .payment-amount {
-  font-size: 56rpx;
+  font-size: 58rpx;
   font-weight: 800;
   color: #b0371b;
   margin: 18rpx 0 10rpx;
@@ -17,7 +17,20 @@
   justify-content: center;
   padding: 12rpx 20rpx;
   border-radius: 999rpx;
+  font-weight: 700;
+}
+
+.status-box-pending_payment {
   background: #fff0db;
   color: #c26b1a;
-  font-weight: 700;
+}
+
+.status-box-pending_confirm {
+  background: #eef4ff;
+  color: #3d62a8;
+}
+
+.status-box-completed {
+  background: #eef6ef;
+  color: #35613d;
 }

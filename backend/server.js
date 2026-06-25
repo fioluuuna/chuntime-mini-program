@@ -10,7 +10,7 @@ function sendJson(res, statusCode, data) {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type",
   })
   res.end(body)
 }
@@ -40,8 +40,17 @@ function readJson(req) {
   })
 }
 
+function round2(value) {
+  return Math.round(value * 100) / 100
+}
+
+function formatMoney(value) {
+  return `¥${round2(value).toFixed(2)}`
+}
+
 function getPublicConfig(config) {
   return {
+    name: config.shopName,
     shopName: config.shopName,
     address: config.address,
     phone: config.phone,
@@ -52,17 +61,21 @@ function getPublicConfig(config) {
     openingDiscountText: config.openingDiscountText,
     saleMode: config.saleMode,
     paymentQrImage: config.paymentQrImage,
-    paymentTips: config.paymentTips
+    paymentTips: config.paymentTips,
   }
 }
 
-function getSupplyStatus(item) {
-  return item.stock <= item.warningLine ? "需补货" : "正常"
+function getSupplyStatusKey(item) {
+  return item.stock <= item.warningLine ? "warning" : "normal"
+}
+
+function getSupplyStatusText(statusKey) {
+  return statusKey === "warning" ? "需补货" : "正常"
 }
 
 function buildDashboard(store) {
   const totalRevenue = store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0)
-  const pendingCount = store.orders.filter((order) => order.status !== "已完成").length
+  const pendingCount = store.orders.filter((order) => order.status !== "completed").length
   const soupMap = {}
   const hourMap = {}
   const customerMap = {}
@@ -79,7 +92,7 @@ function buildDashboard(store) {
       name: order.name || "顾客",
       phone: order.phone || "",
       count: 0,
-      amount: 0
+      amount: 0,
     }
     customerMap[customerKey].count += 1
     customerMap[customerKey].amount += Number(order.totals?.total || 0)
@@ -96,27 +109,31 @@ function buildDashboard(store) {
     }
   }
 
-  const supplies = (store.supplies || []).map((item) => ({
-    ...item,
-    status: getSupplyStatus(item)
-  }))
+  const supplies = (store.supplies || []).map((item) => {
+    const statusKey = getSupplyStatusKey(item)
+    return {
+      ...item,
+      statusKey,
+      statusText: getSupplyStatusText(statusKey),
+    }
+  })
 
   return {
     summaryCards: [
       { label: "累计订单", value: store.orders.length },
-      { label: "累计销售额", value: `¥${totalRevenue.toFixed(2)}` },
+      { label: "累计销售额", value: formatMoney(totalRevenue) },
       { label: "待处理订单", value: pendingCount },
-      { label: "耗材预警", value: supplies.filter((item) => item.status === "需补货").length }
+      { label: "耗材预警", value: supplies.filter((item) => item.statusKey === "warning").length },
     ],
     stocks: store.products.map((item) => ({
       id: item.id,
       name: item.name,
       category: item.category,
       stock: item.stock,
-      remaining: item.stock
+      remaining: item.stock,
     })),
     supplies,
-    supplyAlerts: supplies.filter((item) => item.status === "需补货"),
+    supplyAlerts: supplies.filter((item) => item.statusKey === "warning"),
     analytics: {
       topSoups: Object.keys(soupMap)
         .map((name) => ({ name, count: soupMap[name] }))
@@ -134,10 +151,10 @@ function buildDashboard(store) {
         .slice(0, 5)
         .map((item) => ({
           ...item,
-          amount: `¥${item.amount.toFixed(2)}`
-        }))
+          amount: formatMoney(item.amount),
+        })),
     },
-    reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。"
+    reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。",
   }
 }
 
@@ -148,7 +165,7 @@ function updateOrderStatus(store, orderId, status) {
   }
   const previousStatus = order.status
   order.status = status
-  if (status === "已完成" && previousStatus !== "已完成") {
+  if (status === "completed" && previousStatus !== "completed") {
     store.member.points += Math.floor(Number(order.totals?.total || 0))
     store.member.orderCount += 1
     store.member.lastOrderAt = order.createdAt
@@ -199,9 +216,9 @@ function applyOrder(store, payload) {
     }
   }
 
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
+  const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
   if (store.supplies?.length) {
-    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
-    const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
     if (hasSoup) {
       const box = store.supplies.find((item) => item.id === "supply-box")
       if (box) {
@@ -209,7 +226,7 @@ function applyOrder(store, payload) {
       }
     }
 
-    if (payload.fulfillmentType === "配送") {
+    if (payload.fulfillmentType === "delivery") {
       const bag = store.supplies.find((item) => item.id === "supply-bag")
       if (bag) {
         bag.stock = Math.max(0, bag.stock - 1)
@@ -226,13 +243,13 @@ function applyOrder(store, payload) {
     id: `CT${Date.now()}`,
     name: payload.customerName || "顾客",
     phone: payload.phone || "",
-    fulfillmentType: payload.fulfillmentType || "自提",
+    fulfillmentType: payload.fulfillmentType || "pickup",
     address: payload.address || "",
     remark: payload.remark || "",
     items,
     totals: payload.totals,
-    status: "待付款",
-    createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
+    status: "pending_payment",
+    createdAt: new Date().toLocaleString("zh-CN", { hour12: false }),
   }
 
   store.orders.unshift(order)
@@ -262,7 +279,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/owner-login") {
       const payload = await readJson(req)
       if (String(payload.code || "") !== String(store.config.ownerAccessCode || "")) {
-        sendJson(res, 401, { error: "店长口令不正确" })
+        sendJson(res, 401, { error: "店长密码不正确" })
         return
       }
       sendJson(res, 200, { ok: true })
@@ -291,7 +308,14 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/supplies") {
-      sendJson(res, 200, (store.supplies || []).map((item) => ({ ...item, status: getSupplyStatus(item) })))
+      sendJson(res, 200, (store.supplies || []).map((item) => {
+        const statusKey = getSupplyStatusKey(item)
+        return {
+          ...item,
+          statusKey,
+          statusText: getSupplyStatusText(statusKey),
+        }
+      }))
       return
     }
 
@@ -310,7 +334,8 @@ const server = http.createServer(async (req, res) => {
         supply.warningLine = Math.max(0, payload.warningLine)
       }
       writeStore(store)
-      sendJson(res, 200, { ...supply, status: getSupplyStatus(supply) })
+      const statusKey = getSupplyStatusKey(supply)
+      sendJson(res, 200, { ...supply, statusKey, statusText: getSupplyStatusText(statusKey) })
       return
     }
 
@@ -340,7 +365,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && /^\/api\/orders\/[^/]+\/mark-paid$/.test(url.pathname)) {
       const orderId = url.pathname.split("/")[3]
-      const order = updateOrderStatus(store, orderId, "待确认")
+      const order = updateOrderStatus(store, orderId, "pending_confirm")
       writeStore(store)
       sendJson(res, 200, order)
       return
@@ -349,7 +374,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "PATCH" && /^\/api\/orders\/[^/]+$/.test(url.pathname)) {
       const orderId = url.pathname.split("/").pop()
       const payload = await readJson(req)
-      const order = updateOrderStatus(store, orderId, payload.status || "待付款")
+      const order = updateOrderStatus(store, orderId, payload.status || "pending_payment")
       writeStore(store)
       sendJson(res, 200, order)
       return

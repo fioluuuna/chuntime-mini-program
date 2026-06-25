@@ -5,20 +5,19 @@
     "pages/order/index",
     "pages/member/index",
     "pages/payment/index",
-    "pages/owner-login/index",
     "pages/admin/index",
-    "pages/store/index"
+    "pages/owner-login/index"
   ],
   "window": {
     "navigationBarTitleText": "炖时光",
-    "navigationBarBackgroundColor": "#f7f2ea",
+    "navigationBarBackgroundColor": "#f6efe6",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f7f2ea"
+    "backgroundColor": "#f6efe6"
   },
   "tabBar": {
-    "color": "#6f6256",
-    "selectedColor": "#2f5d3a",
-    "backgroundColor": "#ffffff",
+    "color": "#7a6757",
+    "selectedColor": "#8f3f22",
+    "backgroundColor": "#fffdf9",
     "borderStyle": "white",
     "list": [
       {

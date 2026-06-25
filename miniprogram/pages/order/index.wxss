@@ -1,6 +1,6 @@
 .empty-cart,
 .orders-empty {
-  padding: 34rpx 0 20rpx;
+  padding: 36rpx 0 20rpx;
   text-align: center;
 }
 
@@ -26,7 +26,7 @@
 
 .cart-row,
 .order-row {
-  padding: 18rpx 0;
+  padding: 20rpx 0;
   border-bottom: 1rpx solid #f2ebe3;
 }
 
@@ -44,13 +44,14 @@
 .cart-image {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 16rpx;
+  border-radius: 18rpx;
   flex: 0 0 auto;
 }
 
 .cart-body,
 .order-main {
   flex: 1;
+  min-width: 0;
 }
 
 .cart-name,
@@ -82,18 +83,14 @@
   margin-bottom: 20rpx;
 }
 
-.input,
-.textarea {
-  width: 100%;
-  box-sizing: border-box;
-  background: #f7f2ea;
-  border-radius: 18rpx;
-  padding: 20rpx;
-  margin-top: 14rpx;
+.field-input {
+  height: 92rpx;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-.textarea {
-  min-height: 140rpx;
+.remark-area {
+  min-height: 180rpx;
 }
 
 .chip-wrap {
@@ -111,7 +108,7 @@
 }
 
 .choice-chip-active {
-  background: #315a33;
+  background: #8f3f22;
   color: #fff;
 }
 
@@ -133,12 +130,12 @@
   flex-shrink: 0;
 }
 
-.status-pending-payment {
+.status-pending_payment {
   background: #fff0db;
   color: #c26b1a;
 }
 
-.status-pending-confirm {
+.status-pending_confirm {
   background: #eef4ff;
   color: #3d62a8;
 }
@@ -152,4 +149,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.order-address {
+  line-height: 1.6;
+  white-space: normal;
+  word-break: break-all;
 }

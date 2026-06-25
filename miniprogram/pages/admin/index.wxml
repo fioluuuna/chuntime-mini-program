@@ -36,25 +36,27 @@
     <view class="section-head">
       <view class="section-title">订单管理</view>
       <view class="order-filters">
-        <view class="filter-chip {{orderFilter === '全部' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="全部">全部</view>
-        <view class="filter-chip {{orderFilter === '待付款' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="待付款">待付款</view>
-        <view class="filter-chip {{orderFilter === '待确认' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="待确认">待确认</view>
-        <view class="filter-chip {{orderFilter === '已完成' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="已完成">已完成</view>
+        <view class="filter-chip {{orderFilter === 'all' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="all">全部</view>
+        <view class="filter-chip {{orderFilter === 'pending_payment' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="pending_payment">待付款</view>
+        <view class="filter-chip {{orderFilter === 'pending_confirm' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="pending_confirm">待确认</view>
+        <view class="filter-chip {{orderFilter === 'completed' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="completed">已完成</view>
       </view>
     </view>
     <view wx:for="{{visibleOrders}}" wx:key="id" class="order-admin-row">
       <view class="row space-between align-start">
         <view class="order-detail">
           <view class="stock-name">{{item.id}} · {{item.name}}</view>
-          <view class="muted mt-8">{{item.fulfillmentType}} · {{item.address}}</view>
+          <view class="muted mt-8">{{item.fulfillmentText}} · {{item.phone}}</view>
+          <view class="muted mt-8 order-text">地址：{{item.address}}</view>
+          <view wx:if="{{item.remark}}" class="muted mt-8 order-text">备注：{{item.remark}}</view>
           <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
         </view>
-        <view class="status-pill status-pill-{{item.statusClass}}">{{item.status}}</view>
+        <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
       </view>
       <view class="status-actions mt-16">
-        <view wx:if="{{item.status === '待付款'}}" class="status-btn">等待顾客付款</view>
-        <view wx:if="{{item.status === '待确认'}}" class="status-btn status-btn-primary" bindtap="stepOrder" data-id="{{item.id}}" data-status="已完成">确认收款</view>
-        <view wx:if="{{item.status !== '已完成'}}" class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="已完成">直接完成</view>
+        <view wx:if="{{item.status === 'pending_payment'}}" class="status-btn">等待顾客付款</view>
+        <view wx:if="{{item.status === 'pending_confirm'}}" class="status-btn status-btn-primary" bindtap="stepOrder" data-id="{{item.id}}" data-status="completed">确认收款</view>
+        <view wx:if="{{item.status !== 'completed'}}" class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="completed">直接完成</view>
       </view>
     </view>
   </view>
@@ -85,9 +87,9 @@
         <view>
           <view class="stock-name">{{item.name}}</view>
           <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
-          <view class="muted mt-8">{{item.status}}</view>
+          <view class="muted mt-8">{{item.statusText}}</view>
         </view>
-        <view class="status-pill status-pill-{{item.statusClass}}">{{item.status}}</view>
+        <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
       </view>
       <view class="supply-controls mt-16">
         <view class="control-group">
@@ -111,7 +113,7 @@
   <view class="card" wx:if="{{activeModule === 'report'}}">
     <view class="section-title">日报统计</view>
     <view class="muted">{{reportText}}</view>
-    <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
+    <view class="btn mt-20" bindtap="copyReport">一键复制今日摘要</view>
 
     <view class="analytics-block">
       <view class="analytics-title">哪个汤最受欢迎</view>

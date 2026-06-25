@@ -1,11 +1,11 @@
 <view class="page">
-  <view class="card member-card" bindlongpress="openOwnerLogin">
+  <view class="card member-card">
     <view class="section-head">
       <view>
-        <view class="title member-title">我的</view>
-        <view class="subtitle member-subtitle">积分、券包、储值和复购成长都在这里</view>
+        <view class="title member-title">我的会员</view>
+        <view class="subtitle member-subtitle">积分、券包、储值和复购成长都在这里。</view>
       </view>
-      <view class="tag light-tag">{{serviceMode === 'local' ? '演示模式' : '联调模式'}}</view>
+      <view class="tag light-tag">{{membership}}</view>
     </view>
     <view class="member-level">{{membership}}</view>
     <view class="muted light-text mt-8">累计下单 {{orderCount}} 次 · {{nextLevelTip}}</view>
@@ -18,7 +18,7 @@
     <view class="card stat-card">
       <view class="section-title">积分</view>
       <view class="stat-value">{{points}}</view>
-      <view class="muted">300 分可换 1 份炖汤</view>
+      <view class="muted">300 积分可换 1 份炖汤</view>
     </view>
     <view class="card stat-card">
       <view class="section-title">储值余额</view>

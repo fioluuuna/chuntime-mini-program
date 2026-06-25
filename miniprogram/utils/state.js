@@ -1,7 +1,7 @@
 const KEYS = {
   cart: "ct_cart",
   ownedOrders: "ct_owned_orders",
-  ownerSession: "ct_owner_session"
+  ownerSession: "ct_owner_session",
 }
 
 function clone(value) {
@@ -36,7 +36,7 @@ function addCartItem({
   image,
   category,
   quantity = 1,
-  parts = []
+  parts = [],
 }) {
   const cart = getCart()
   const index = cart.findIndex((item) => item.productId === productId)
@@ -56,7 +56,7 @@ function addCartItem({
       image,
       category,
       quantity,
-      parts
+      parts,
     })
   }
   saveCart(cart)
@@ -107,10 +107,10 @@ function clearOwnerSession() {
   wx.removeStorageSync(KEYS.ownerSession)
 }
 
-function calculateCartTotals(cart, discountRate, deliveryFee, fulfillmentType = "配送") {
+function calculateCartTotals(cart, discountRate, deliveryFee, fulfillmentType = "delivery") {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountedSubtotal = Math.round(subtotal * 100) / 100
-  const shipping = cart.length && fulfillmentType === "配送" ? deliveryFee : 0
+  const shipping = cart.length && fulfillmentType === "delivery" ? deliveryFee : 0
   const total = Math.round((discountedSubtotal + shipping) * 100) / 100
   const originalSubtotal = cart.reduce((sum, item) => {
     if (item.parts?.length) {
@@ -124,7 +124,7 @@ function calculateCartTotals(cart, discountRate, deliveryFee, fulfillmentType = 
     discountedSubtotal,
     shipping,
     total,
-    savings: Math.round((originalSubtotal - discountedSubtotal) * 100) / 100
+    savings: Math.round((originalSubtotal - discountedSubtotal) * 100) / 100,
   }
 }
 
@@ -141,5 +141,5 @@ module.exports = {
   setOwnerSession,
   hasOwnerSession,
   clearOwnerSession,
-  calculateCartTotals
+  calculateCartTotals,
 }

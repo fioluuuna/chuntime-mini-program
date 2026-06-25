@@ -1,5 +1,5 @@
 const { catalog, discounted, toPriceText, buildCombo } = require("../../utils/pricing")
-const { getProducts: getRemoteProducts, getConfig, getServiceMode } = require("../../utils/api")
+const { getProducts: getRemoteProducts, getConfig } = require("../../utils/api")
 const { getCart, addCartItem, ensureState } = require("../../utils/state")
 
 function mapProduct(item, discountRate) {
@@ -16,14 +16,13 @@ function mapProduct(item, discountRate) {
 Page({
   data: {
     shop: catalog.shop,
-    poster: catalog.images.menuPoster,
-    serviceMode: "remote",
     categories: [
       { key: "soup", label: "炖汤" },
       { key: "noodle", label: "面食" },
       { key: "combo", label: "套餐" },
     ],
     activeCategory: "soup",
+    scrollTarget: "section-soup",
     soups: [],
     noodles: [],
     selectedSoupId: "",
@@ -40,18 +39,33 @@ Page({
 
   async refresh() {
     let settings = { discountRate: catalog.shop.discountRate }
-    let products = [...catalog.soups.map((item) => ({ ...item, category: "soup" })), ...catalog.noodles.map((item) => ({ ...item, category: "noodle", stock: 20 }))]
-    ;[settings, products] = await Promise.all([getConfig(), getRemoteProducts()])
+    let products = [
+      ...catalog.soups.map((item) => ({ ...item, category: "soup" })),
+      ...catalog.noodles.map((item) => ({ ...item, category: "noodle" })),
+    ]
+
+    try {
+      ;[settings, products] = await Promise.all([getConfig(), getRemoteProducts()])
+    } catch (error) {
+      // Fall back to local catalog data.
+    }
+
     const cart = getCart()
-    const soupItems = products.filter((item) => item.category === "soup").map((item) => mapProduct(item, settings.discountRate))
-    const noodleItems = products.filter((item) => item.category === "noodle").map((item) => mapProduct(item, settings.discountRate))
+    const soupItems = products
+      .filter((item) => item.category === "soup")
+      .map((item) => mapProduct(item, settings.discountRate))
+    const noodleItems = products
+      .filter((item) => item.category === "noodle")
+      .map((item) => mapProduct(item, settings.discountRate))
+
     const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const selectedSoupId = soupItems.some((item) => item.id === this.data.selectedSoupId)
       ? this.data.selectedSoupId
-      : (soupItems[0] && soupItems[0].id) || ""
+      : ((soupItems.find((item) => !item.soldOut) || soupItems[0] || {}).id || "")
     const selectedNoodleId = noodleItems.some((item) => item.id === this.data.selectedNoodleId)
       ? this.data.selectedNoodleId
-      : (noodleItems[0] && noodleItems[0].id) || ""
+      : ((noodleItems.find((item) => !item.soldOut) || noodleItems[0] || {}).id || "")
+
     this.setData({
       shop: { ...this.data.shop, ...settings },
       soups: soupItems,
@@ -60,20 +74,16 @@ Page({
       selectedNoodleId,
       cartCount: cart.reduce((sum, item) => sum + item.quantity, 0),
       cartTotalText: toPriceText(cartTotal),
-      serviceMode: getServiceMode(),
     })
     this.refreshComboSummary()
   },
 
-  previewPoster() {
-    wx.previewImage({
-      current: this.data.poster,
-      urls: [this.data.poster],
-    })
-  },
-
   selectCategory(e) {
-    this.setData({ activeCategory: e.currentTarget.dataset.key })
+    const key = e.currentTarget.dataset.key
+    this.setData({
+      activeCategory: key,
+      scrollTarget: `section-${key}`,
+    })
   },
 
   addItem(item) {
@@ -88,7 +98,7 @@ Page({
       quantity: 1,
     })
     this.refresh()
-    wx.showToast({ title: "已加入", icon: "success" })
+    wx.showToast({ title: "已加入购物车", icon: "success" })
   },
 
   addById(e) {
@@ -98,23 +108,29 @@ Page({
   },
 
   chooseComboSoup(e) {
-    this.setData({ selectedSoupId: e.currentTarget.dataset.id })
+    const item = this.data.soups.find((row) => row.id === e.currentTarget.dataset.id)
+    if (!item || item.soldOut) return
+    this.setData({ selectedSoupId: item.id })
     this.refreshComboSummary()
   },
 
   chooseComboNoodle(e) {
-    this.setData({ selectedNoodleId: e.currentTarget.dataset.id })
+    const item = this.data.noodles.find((row) => row.id === e.currentTarget.dataset.id)
+    if (!item || item.soldOut) return
+    this.setData({ selectedNoodleId: item.id })
     this.refreshComboSummary()
   },
 
   refreshComboSummary() {
     const soup = this.data.soups.find((item) => item.id === this.data.selectedSoupId)
     const noodle = this.data.noodles.find((item) => item.id === this.data.selectedNoodleId)
+
     if (!soup || !noodle) {
       this.setData({ comboSummary: null })
       return
     }
-    const result = buildCombo(soup, noodle, this.data.shop.discountRate)
+
+    const result = buildCombo(soup, noodle, this.data.shop.discountRate || catalog.shop.discountRate)
     this.setData({
       comboSummary: {
         soup,
@@ -123,14 +139,14 @@ Page({
         finalText: toPriceText(result.final),
         savingsText: toPriceText(result.savings),
         final: result.final,
-      }
+      },
     })
   },
 
   addCombo() {
     const summary = this.data.comboSummary
     if (!summary || summary.soup.soldOut || summary.noodle.soldOut) {
-      wx.showToast({ title: "套餐内有商品售罄", icon: "none" })
+      wx.showToast({ title: "套餐内有商品已售罄", icon: "none" })
       return
     }
     addCartItem({
@@ -144,13 +160,13 @@ Page({
       parts: [
         { productId: summary.soup.id, productName: summary.soup.name, quantity: 1, originalPrice: summary.soup.originalPrice },
         { productId: summary.noodle.id, productName: summary.noodle.name, quantity: 1, originalPrice: summary.noodle.originalPrice },
-      ]
+      ],
     })
     this.refresh()
-    wx.showToast({ title: "套餐已加入", icon: "success" })
+    wx.showToast({ title: "套餐已加入购物车", icon: "success" })
   },
 
   goCheckout() {
-    wx.navigateTo({ url: "/pages/order/index" })
+    wx.switchTab({ url: "/pages/order/index" })
   },
 })

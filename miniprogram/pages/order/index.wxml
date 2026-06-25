@@ -2,10 +2,10 @@
   <view class="card">
     <view class="section-head">
       <view>
-        <view class="title">订单</view>
-        <view class="subtitle">先下单，再扫码付款，付款后点“我已付款”等店长确认。</view>
+        <view class="title">提交订单</view>
+        <view class="subtitle">先下单，再扫码付款。付款后点“我已付款”，店长核实后会手动确认。</view>
       </view>
-      <view class="tag">{{serviceMode === 'local' ? '演示模式' : '联调模式'}}</view>
+      <view class="tag">线下扫码付款</view>
     </view>
   </view>
 
@@ -23,7 +23,7 @@
     <view wx:for="{{cart}}" wx:key="id" class="cart-row">
       <image class="cart-image" src="{{item.image}}" mode="aspectFill"></image>
       <view class="cart-body">
-        <view class="row space-between">
+        <view class="row space-between align-start">
           <view class="cart-name">{{item.productName}}</view>
           <view class="price">¥{{item.price}}</view>
         </view>
@@ -43,19 +43,40 @@
     <view class="section-title">配送信息</view>
     <radio-group bindchange="changeFulfillment">
       <label class="radio-item">
-        <radio value="配送" checked="{{fulfillmentType === '配送'}}" />
+        <radio value="delivery" checked="{{fulfillmentType === 'delivery'}}" />
         <text>配送</text>
       </label>
       <label class="radio-item">
-        <radio value="自提" checked="{{fulfillmentType === '自提'}}" />
+        <radio value="pickup" checked="{{fulfillmentType === 'pickup'}}" />
         <text>自提</text>
       </label>
     </radio-group>
 
-    <input class="input" placeholder="联系人" value="{{customerName}}" data-field="customerName" bindinput="bindInput" />
-    <input class="input" placeholder="手机号" value="{{phone}}" data-field="phone" bindinput="bindInput" />
-    <input class="input" placeholder="配送地址或自提说明" value="{{address}}" data-field="address" bindinput="bindInput" />
-    <view wx:if="{{fulfillmentType === '配送'}}" class="chip-wrap mt-16">
+    <input
+      class="input field-input"
+      placeholder="联系人"
+      placeholder-class="field-placeholder"
+      value="{{customerName}}"
+      data-field="customerName"
+      bindinput="bindInput"
+    />
+    <input
+      class="input field-input"
+      placeholder="手机号"
+      placeholder-class="field-placeholder"
+      value="{{phone}}"
+      data-field="phone"
+      bindinput="bindInput"
+    />
+    <input
+      class="input field-input"
+      placeholder="配送地址或自提说明"
+      placeholder-class="field-placeholder"
+      value="{{address}}"
+      data-field="address"
+      bindinput="bindInput"
+    />
+    <view wx:if="{{fulfillmentType === 'delivery'}}" class="chip-wrap mt-16">
       <view
         wx:for="{{areaOptions}}"
         wx:key="*this"
@@ -66,7 +87,14 @@
         {{item}}
       </view>
     </view>
-    <textarea class="textarea" placeholder="备注，比如少辣、到店前联系我" value="{{remark}}" data-field="remark" bindinput="bindInput"></textarea>
+    <textarea
+      class="textarea remark-area"
+      placeholder="备注，比如少辣、到店前联系我"
+      placeholder-class="field-placeholder"
+      value="{{remark}}"
+      data-field="remark"
+      bindinput="bindInput"
+    ></textarea>
   </view>
 
   <view class="card">
@@ -91,16 +119,18 @@
     <view wx:for="{{myOrders}}" wx:key="id" class="order-row">
       <view class="row space-between align-start">
         <view class="order-main">
-          <view class="order-id">{{item.id}} · {{item.fulfillmentType}}</view>
-          <view class="muted mt-8">{{item.createdAt}}</view>
-          <view class="muted mt-8">金额 ¥{{item.totals.total}}</view>
+          <view class="order-id">{{item.id}} · {{item.fulfillmentText}}</view>
+          <view class="muted mt-8">联系人：{{item.name}} · {{item.phone}}</view>
+          <view class="muted mt-8 order-address">地址：{{item.address}}</view>
+          <view wx:if="{{item.remark}}" class="muted mt-8 order-address">备注：{{item.remark}}</view>
+          <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
         </view>
-        <view class="status status-{{item.statusClass}}">{{item.status}}</view>
+        <view class="status status-{{item.status}}">{{item.statusText}}</view>
       </view>
       <view class="order-actions mt-16">
-        <view wx:if="{{item.status === '待付款'}}" class="btn btn-ghost" bindtap="goPayment" data-id="{{item.id}}">去付款</view>
-        <view wx:elif="{{item.status === '待确认'}}" class="muted">已提交付款，等待店长确认收款</view>
-        <view wx:else class="muted">订单已完成，可继续下单</view>
+        <view wx:if="{{item.status === 'pending_payment'}}" class="btn btn-ghost" bindtap="goPayment" data-id="{{item.id}}">去付款</view>
+        <view wx:elif="{{item.status === 'pending_confirm'}}" class="muted">已通知店长确认收款，请稍等。</view>
+        <view wx:else class="muted">店长已确认收款，订单已完成。</view>
       </view>
     </view>
   </view>

@@ -1,19 +1,11 @@
-.menu-poster {
-  border-radius: 24rpx;
-}
-
-.notice-strip {
-  padding: 18rpx 0 4rpx;
-}
-
 .menu-shell {
   display: flex;
-  gap: 20rpx;
+  gap: 18rpx;
   align-items: flex-start;
 }
 
 .menu-sidebar {
-  width: 150rpx;
+  width: 144rpx;
   position: sticky;
   top: 24rpx;
 }
@@ -21,22 +13,28 @@
 .category-item {
   padding: 24rpx 14rpx;
   margin-bottom: 14rpx;
-  border-radius: 24rpx;
-  background: #f2eadf;
+  border-radius: 26rpx;
+  background: rgba(245, 236, 225, 0.96);
   color: #6d5a49;
   text-align: center;
   font-weight: 600;
+  box-shadow: inset 0 0 0 1rpx rgba(199, 169, 141, 0.14);
 }
 
 .category-item-active {
-  background: linear-gradient(180deg, #315a33, #456847);
+  background: linear-gradient(180deg, #8f3f22, #b86130);
   color: #fff;
-  box-shadow: 0 12rpx 28rpx rgba(49, 90, 51, 0.18);
+  box-shadow: 0 14rpx 28rpx rgba(184, 97, 48, 0.22);
+}
+
+.menu-content-scroll {
+  flex: 1;
+  min-width: 0;
+  height: calc(100vh - 300rpx);
 }
 
 .menu-content {
-  flex: 1;
-  min-width: 0;
+  padding-bottom: 8rpx;
 }
 
 .content-card {
@@ -47,7 +45,7 @@
   display: flex;
   gap: 18rpx;
   padding: 20rpx 0;
-  border-bottom: 1rpx solid #f2ebe3;
+  border-bottom: 1rpx solid #f1e8de;
 }
 
 .menu-item:last-child {
@@ -56,14 +54,16 @@
 }
 
 .menu-image {
-  width: 148rpx;
-  height: 148rpx;
-  border-radius: 18rpx;
+  width: 152rpx;
+  height: 152rpx;
+  border-radius: 22rpx;
   flex: 0 0 auto;
+  background: #f6ecdf;
 }
 
 .menu-body {
   flex: 1;
+  min-width: 0;
 }
 
 .menu-name {
@@ -74,16 +74,17 @@
 }
 
 .add-btn {
-  width: 60rpx;
-  height: 60rpx;
+  width: 62rpx;
+  height: 62rpx;
   border-radius: 50%;
-  background: #ff9c3b;
+  background: linear-gradient(180deg, #ff9f42, #eb7d24);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 40rpx;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .add-btn-disabled {
@@ -92,7 +93,7 @@
 }
 
 .combo-section {
-  margin-top: 22rpx;
+  margin-top: 24rpx;
 }
 
 .combo-label {
@@ -110,13 +111,13 @@
 .choice-chip {
   padding: 14rpx 18rpx;
   border-radius: 999rpx;
-  background: #f5eee4;
+  background: #f6eee4;
   color: #6f5d4f;
   font-size: 22rpx;
 }
 
 .choice-chip-active {
-  background: #315a33;
+  background: #8f3f22;
   color: #fff;
 }
 

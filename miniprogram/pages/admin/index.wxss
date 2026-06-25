@@ -116,6 +116,7 @@
 
 .order-detail {
   flex: 1;
+  min-width: 0;
 }
 
 .supply-controls {
@@ -141,4 +142,10 @@
   justify-content: space-between;
   padding: 10rpx 0;
   color: #6f5d4f;
+}
+
+.order-text {
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.6;
 }

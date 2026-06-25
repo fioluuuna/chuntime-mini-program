@@ -1,10 +1,24 @@
 const { getOrderById, getConfig, markOrderPaid } = require("../../utils/api")
 
+function getOrderStatusText(status) {
+  switch (status) {
+    case "pending_payment":
+      return "待付款"
+    case "pending_confirm":
+      return "待确认"
+    case "completed":
+      return "已完成"
+    default:
+      return "处理中"
+  }
+}
+
 Page({
   data: {
     shop: {},
     order: null,
     loading: true,
+    statusText: "",
   },
 
   async onLoad(query) {
@@ -22,6 +36,7 @@ Page({
       this.setData({
         shop,
         order,
+        statusText: getOrderStatusText(order.status),
         loading: false,
       })
     } catch (error) {
@@ -38,7 +53,7 @@ Page({
   },
 
   async confirmPaid() {
-    if (!this.data.order || this.data.order.status !== "待付款") {
+    if (!this.data.order || this.data.order.status !== "pending_payment") {
       wx.showToast({ title: "当前状态无需重复提交", icon: "none" })
       return
     }
@@ -53,5 +68,5 @@ Page({
 
   goOrders() {
     wx.switchTab({ url: "/pages/order/index" })
-  }
+  },
 })

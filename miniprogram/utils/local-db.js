@@ -10,6 +10,10 @@ function round2(value) {
   return Math.round(value * 100) / 100
 }
 
+function formatMoney(value) {
+  return `¥${round2(value).toFixed(2)}`
+}
+
 function buildDefaultStore() {
   const products = [
     ...catalog.soups.map((item) => ({
@@ -20,6 +24,7 @@ function buildDefaultStore() {
       image: item.image,
       desc: item.desc,
       stock: item.stock,
+      baseStock: item.baseStock || item.stock,
     })),
     ...catalog.noodles.map((item) => ({
       id: item.id,
@@ -33,6 +38,7 @@ function buildDefaultStore() {
   ]
 
   return {
+    schemaVersion: 2,
     config: {
       shopName: catalog.shop.name,
       address: catalog.shop.address,
@@ -43,9 +49,9 @@ function buildDefaultStore() {
       discountRate: catalog.shop.discountRate,
       openingDiscountText: catalog.shop.openingDiscountText,
       saleMode: "preorder",
-      paymentQrImage: "/assets/images/owner-qr.png",
-      paymentTips: "当前测试页先使用店长二维码占位。正式营业前，请替换成店长个人收款码图片；顾客转账后再点击“我已付款”。",
-      ownerAccessCode: "888888",
+      paymentQrImage: catalog.images.paymentQr,
+      paymentTips: "请使用店长个人微信收款码付款，付款后再点击“我已付款”，店长会手动确认。",
+      ownerAccessCode: "dsg2026",
     },
     products,
     supplies: [
@@ -60,9 +66,9 @@ function buildDefaultStore() {
       orderCount: 3,
       lastOrderAt: "2026/06/25 18:20:00",
       coupons: [
-        { id: "coupon-88-1", title: "88折券", desc: "全单使用", type: "discount" },
-        { id: "coupon-88-2", title: "88折券", desc: "全单使用", type: "discount" },
-        { id: "coupon-soup-1", title: "炖汤兑换券", desc: "300积分可兑指定炖汤", type: "gift" },
+        { id: "coupon-88-1", title: "88 折券", desc: "全单可用", type: "discount" },
+        { id: "coupon-88-2", title: "88 折券", desc: "全单可用", type: "discount" },
+        { id: "coupon-soup-1", title: "炖汤兑换券", desc: "300 积分可兑换指定炖汤", type: "gift" },
       ],
     },
     orders: [
@@ -70,7 +76,7 @@ function buildDefaultStore() {
         id: "CTA103",
         name: "陈小姐",
         phone: "13800000001",
-        fulfillmentType: "配送",
+        fulfillmentType: "delivery",
         address: "金山谷",
         remark: "",
         items: [
@@ -78,28 +84,28 @@ function buildDefaultStore() {
           { productId: "noodle-01", productName: "葱油菠菜面", quantity: 1, price: 8.71, originalPrice: 9.9 },
         ],
         totals: { subtotal: 27.9, discountedSubtotal: 24.55, shipping: 3, savings: 3.35, total: 27.55 },
-        status: "待确认",
+        status: "pending_confirm",
         createdAt: "2026/06/25 10:32:00",
       },
       {
         id: "CTA104",
         name: "李先生",
         phone: "13800000002",
-        fulfillmentType: "自提",
+        fulfillmentType: "pickup",
         address: "到店自取",
-        remark: "12点后到店",
+        remark: "12 点后到店",
         items: [
           { productId: "soup-07", productName: "红萝卜汤", quantity: 2, price: 13.2, originalPrice: 15 },
         ],
         totals: { subtotal: 30, discountedSubtotal: 26.4, shipping: 0, savings: 3.6, total: 26.4 },
-        status: "已完成",
+        status: "completed",
         createdAt: "2026/06/24 18:06:00",
       },
       {
         id: "CTA105",
         name: "王女士",
         phone: "13800000003",
-        fulfillmentType: "配送",
+        fulfillmentType: "delivery",
         address: "意库",
         remark: "",
         items: [
@@ -116,7 +122,7 @@ function buildDefaultStore() {
           },
         ],
         totals: { subtotal: 30.9, discountedSubtotal: 27.19, shipping: 3, savings: 3.71, total: 30.19 },
-        status: "待付款",
+        status: "pending_payment",
         createdAt: "2026/06/25 11:08:00",
       },
     ],
@@ -125,6 +131,7 @@ function buildDefaultStore() {
 
 function getPublicConfig(config) {
   return {
+    name: config.shopName,
     shopName: config.shopName,
     address: config.address,
     phone: config.phone,
@@ -141,7 +148,7 @@ function getPublicConfig(config) {
 
 function ensureStore() {
   const current = wx.getStorageSync(KEY)
-  if (!current) {
+  if (!current || Number(current.schemaVersion || 0) < 2) {
     wx.setStorageSync(KEY, buildDefaultStore())
   }
 }
@@ -171,13 +178,17 @@ function parseHourLabel(createdAt) {
   return `${String(hour).padStart(2, "0")}:00-${String(hour + 1).padStart(2, "0")}:00`
 }
 
-function getSupplyStatus(item) {
-  return item.stock <= item.warningLine ? "需补货" : "正常"
+function getSupplyStatusKey(item) {
+  return item.stock <= item.warningLine ? "warning" : "normal"
+}
+
+function getSupplyStatusText(statusKey) {
+  return statusKey === "warning" ? "需补货" : "正常"
 }
 
 function buildDashboard(store) {
   const totalRevenue = store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0)
-  const pendingCount = store.orders.filter((order) => order.status !== "已完成").length
+  const pendingCount = store.orders.filter((order) => order.status !== "completed").length
   const stockCards = store.products.map((item) => ({
     id: item.id,
     name: item.name,
@@ -185,11 +196,15 @@ function buildDashboard(store) {
     stock: item.stock,
     remaining: item.stock,
   }))
-  const supplyCards = store.supplies.map((item) => ({
-    ...item,
-    status: getSupplyStatus(item),
-  }))
-  const supplyAlerts = supplyCards.filter((item) => item.status === "需补货")
+  const supplyCards = store.supplies.map((item) => {
+    const statusKey = getSupplyStatusKey(item)
+    return {
+      ...item,
+      statusKey,
+      statusText: getSupplyStatusText(statusKey),
+    }
+  })
+  const supplyAlerts = supplyCards.filter((item) => item.statusKey === "warning")
 
   const soupMap = {}
   const hourMap = {}
@@ -221,7 +236,7 @@ function buildDashboard(store) {
   return {
     summaryCards: [
       { label: "累计订单", value: store.orders.length },
-      { label: "累计销售额", value: `¥${round2(totalRevenue).toFixed(2)}` },
+      { label: "累计销售额", value: formatMoney(totalRevenue) },
       { label: "待处理订单", value: pendingCount },
       { label: "耗材预警", value: supplyAlerts.length },
     ],
@@ -245,7 +260,7 @@ function buildDashboard(store) {
         .slice(0, 5)
         .map((item) => ({
           ...item,
-          amount: `¥${round2(item.amount).toFixed(2)}`,
+          amount: formatMoney(item.amount),
         })),
     },
     reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。",
@@ -290,33 +305,35 @@ function applyOrder(store, payload) {
     }
   }
 
-  if (items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))) {
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
+  const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
+  if (hasSoup) {
     const box = store.supplies.find((item) => item.id === "supply-box")
     if (box) {
-      box.stock = Math.max(0, box.stock - items.reduce((sum, item) => sum + item.quantity, 0))
+      box.stock = Math.max(0, box.stock - totalQuantity)
     }
   }
 
   const bag = store.supplies.find((item) => item.id === "supply-bag")
-  if (bag && payload.fulfillmentType === "配送") {
+  if (bag && payload.fulfillmentType === "delivery") {
     bag.stock = Math.max(0, bag.stock - 1)
   }
 
   const cutlery = store.supplies.find((item) => item.id === "supply-cutlery")
   if (cutlery) {
-    cutlery.stock = Math.max(0, cutlery.stock - items.reduce((sum, item) => sum + item.quantity, 0))
+    cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
   }
 
   const order = {
     id: `CT${Date.now()}`,
     name: payload.customerName || "顾客",
     phone: payload.phone || "",
-    fulfillmentType: payload.fulfillmentType || "配送",
+    fulfillmentType: payload.fulfillmentType || "delivery",
     address: payload.address || "",
     remark: payload.remark || "",
     items,
     totals: payload.totals || {},
-    status: "待付款",
+    status: "pending_payment",
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false }),
   }
 
@@ -331,7 +348,7 @@ function getConfig() {
 function ownerLogin(code) {
   const store = readStore()
   if (String(code || "") !== String(store.config.ownerAccessCode || "")) {
-    return Promise.reject(new Error("店长口令不正确"))
+    return Promise.reject(new Error("店长密码不正确"))
   }
   return Promise.resolve({ ok: true })
 }
@@ -353,7 +370,14 @@ function updateProductStock(productId, stock) {
 
 function getSupplies() {
   const store = readStore()
-  return Promise.resolve(store.supplies.map((item) => ({ ...item, status: getSupplyStatus(item) })))
+  return Promise.resolve(store.supplies.map((item) => {
+    const statusKey = getSupplyStatusKey(item)
+    return {
+      ...item,
+      statusKey,
+      statusText: getSupplyStatusText(statusKey),
+    }
+  }))
 }
 
 function updateSupply(supplyId, payload = {}) {
@@ -369,7 +393,8 @@ function updateSupply(supplyId, payload = {}) {
     supply.warningLine = Math.max(0, payload.warningLine)
   }
   writeStore(store)
-  return Promise.resolve({ ...supply, status: getSupplyStatus(supply) })
+  const statusKey = getSupplyStatusKey(supply)
+  return Promise.resolve({ ...supply, statusKey, statusText: getSupplyStatusText(statusKey) })
 }
 
 function getOrders() {
@@ -399,7 +424,7 @@ function updateOrderStatus(orderId, status) {
   }
   const previousStatus = order.status
   order.status = status
-  if (status === "已完成" && previousStatus !== "已完成") {
+  if (status === "completed" && previousStatus !== "completed") {
     store.member.points += Math.floor(Number(order.totals?.total || 0))
     store.member.orderCount += 1
     store.member.lastOrderAt = order.createdAt
@@ -414,7 +439,7 @@ function updateOrderStatus(orderId, status) {
 }
 
 function markOrderPaid(orderId) {
-  return updateOrderStatus(orderId, "待确认")
+  return updateOrderStatus(orderId, "pending_confirm")
 }
 
 function getMember() {
