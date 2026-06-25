@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="card">
+    <view class="title">{{shop.name}}</view>
+    <view class="subtitle">意库66栋，暖心素火锅隔壁</view>
+    <view class="mt-16">
+      <text class="pill">营业时间 {{shop.hours}}</text>
+      <text class="pill">配送 {{shop.deliveryAreas[0]}} / {{shop.deliveryAreas[1]}} / {{shop.deliveryAreas[2]}}</text>
+      <text class="pill">配送费 ¥{{shop.deliveryFee}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">路线图</view>
+    <image class="image route-image" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
+    <view class="muted mt-16">点击图片可放大查看。也可以把它放到首页和门店页，顾客更容易找到。</view>
+  </view>
+
+  <view class="grid-2">
+    <view class="btn" bindtap="callShop">拨打电话</view>
+    <view class="btn btn-ghost" bindtap="previewRoute">放大路线图</view>
+  </view>
+</view>
+

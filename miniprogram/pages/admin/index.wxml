@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="card">
+    <view class="title">店长后台</view>
+    <view class="subtitle">手机上就能看订单、看库存、看日报，不需要导出表格也能先管理起来。</view>
+  </view>
+
+  <view class="grid-2">
+    <view class="card stat-card" wx:for="{{summaryCards}}" wx:key="label">
+      <view class="stat-label">{{item.label}}</view>
+      <view class="stat-value">{{item.value}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">库存确认</view>
+    <view class="muted mb-16">这里只保留“确认库存”和“售罄控制”，不自动算采购需求。</view>
+    <view wx:for="{{stocks}}" wx:key="name" class="stock-row">
+      <view class="stock-name">{{item.name}}</view>
+      <view class="muted">预订 {{item.reserved}} · 剩余 {{item.remaining}} / 总 {{item.stock}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">手机日报</view>
+    <view class="muted">{{reportText}}</view>
+    <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
+  </view>
+</view>
+

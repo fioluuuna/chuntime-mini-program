@@ -1,0 +1,65 @@
+<view class="page">
+  <view class="card hero">
+    <image class="image hero-image" src="{{menuPoster}}" mode="aspectFill"></image>
+    <view class="hero-overlay">
+      <view class="title">{{shop.name}}</view>
+      <view class="subtitle">把时间炖进汤里，慢下来，才是时光</view>
+      <view class="mt-16">
+        <text class="pill">{{shop.openingDiscountText}}</text>
+        <text class="pill">{{shop.hours}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="grid-2">
+    <view class="card quick" bindtap="goTo" data-page="menu">
+      <view class="section-title">今日菜单</view>
+      <view class="muted">看汤品、面品、折扣价和库存</view>
+    </view>
+    <view class="card quick" bindtap="goTo" data-page="combo">
+      <view class="section-title">组合套餐</view>
+      <view class="muted">汤和面分别选，自动计算价格</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">今天为什么更方便</view>
+    <view wx:for="{{highlights}}" wx:key="label" class="feature-row">
+      <view class="feature-label">{{item.label}}</view>
+      <view class="muted">{{item.value}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row space-between mb-16">
+      <view class="section-title">热卖汤品</view>
+      <view class="muted">88 折后价格自动显示</view>
+    </view>
+    <view wx:for="{{soups}}" wx:key="id" class="soup-row">
+      <image class="soup-image" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="soup-body">
+        <view class="row space-between">
+          <view class="soup-name">{{item.name}}</view>
+          <view class="price">¥{{item.salePrice}}</view>
+        </view>
+        <view class="muted">{{item.desc}}</view>
+        <view class="muted mt-16">原价 ¥{{item.originalText}} · 库存 {{item.stock}} 份</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row space-between mb-12">
+      <view class="section-title">怎么找到我们</view>
+      <view class="btn btn-ghost" bindtap="goTo" data-page="store">看路线图</view>
+    </view>
+    <image class="image route-preview" src="{{routeImage}}" mode="widthFix" bindtap="previewRoute"></image>
+    <view class="muted mt-16">意库66栋，暖心素火锅隔壁。点开可以放大看路线。</view>
+  </view>
+
+  <view class="grid-2">
+    <view class="btn" bindtap="goTo" data-page="order">查看订单</view>
+    <view class="btn btn-ghost" bindtap="goTo" data-page="admin">店长后台</view>
+  </view>
+</view>
+

@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title">订单状态</view>
+    <view class="muted">这里先做成手机可看的订单汇总，后续可以接真实接口。</view>
+  </view>
+
+  <view class="card" wx:for="{{orders}}" wx:key="id">
+    <view class="row space-between">
+      <view>
+        <view class="order-id">{{item.id}} · {{item.name}}</view>
+        <view class="muted mt-12">{{item.item}}</view>
+      </view>
+      <view class="status">{{item.status}}</view>
+    </view>
+  </view>
+</view>
+

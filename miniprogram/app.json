@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/menu/index",
+    "pages/combo/index",
+    "pages/order/index",
+    "pages/member/index",
+    "pages/store/index",
+    "pages/admin/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "炖时光",
+    "navigationBarBackgroundColor": "#fff8f1",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fff8f1"
+  }
+}
+

@@ -1,0 +1,30 @@
+.stat-card {
+  min-height: 160rpx;
+}
+
+.stat-label {
+  color: #7c6b5d;
+  font-size: 24rpx;
+}
+
+.stat-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-top: 12rpx;
+}
+
+.stock-row {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f2ebe3;
+}
+
+.stock-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.stock-name {
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+

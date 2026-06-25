@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="card member-card">
+    <view class="title">我的会员</view>
+    <view class="subtitle">你的长期复购，会被系统记住</view>
+    <view class="member-level">{{membership}}</view>
+  </view>
+
+  <view class="grid-2">
+    <view class="card stat-card">
+      <view class="section-title">积分</view>
+      <view class="stat-value">{{points}}</view>
+      <view class="muted">300 分可换 1 份炖汤</view>
+    </view>
+    <view class="card stat-card">
+      <view class="section-title">储值余额</view>
+      <view class="stat-value">¥{{balance}}</view>
+      <view class="muted">可用于下单结算</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">我的券包</view>
+    <view wx:for="{{coupons}}" wx:key="*this" class="coupon-item">{{item}}</view>
+  </view>
+</view>
+
