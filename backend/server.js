@@ -63,6 +63,15 @@ function buildDashboard(store) {
   }
 }
 
+function updateOrderStatus(store, orderId, status) {
+  const order = store.orders.find((item) => item.id === orderId)
+  if (!order) {
+    throw new Error("订单不存在")
+  }
+  order.status = status
+  return order
+}
+
 function applyOrder(store, payload) {
   const items = Array.isArray(payload.items) ? payload.items : []
   if (!items.length) {
@@ -178,6 +187,15 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === "PATCH" && url.pathname.startsWith("/api/orders/")) {
+      const orderId = url.pathname.split("/").pop()
+      const payload = await readJson(req)
+      const order = updateOrderStatus(store, orderId, payload.status || "待接单")
+      writeStore(store)
+      sendJson(res, 200, order)
+      return
+    }
+
     if (req.method === "GET" && url.pathname === "/api/member") {
       sendJson(res, 200, store.member)
       return
@@ -203,4 +221,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, () => {
   console.log(`Chuntime backend listening on http://127.0.0.1:${port}`)
 })
-

@@ -1,10 +1,11 @@
-const { getDashboard, updateProductStock, resetDemo } = require("../../utils/api")
+const { getDashboard, updateProductStock, resetDemo, getOrders, updateOrderStatus } = require("../../utils/api")
 
 Page({
   data: {
     summaryCards: [],
     stocks: [],
-    reportText: ""
+    reportText: "",
+    orders: []
   },
 
   async onShow() {
@@ -19,6 +20,8 @@ Page({
         stocks: dashboard.stocks,
         reportText: dashboard.reportText
       })
+      const orders = await getOrders()
+      this.setData({ orders })
     } catch (error) {
       wx.showToast({ title: "后端未连接，后台数据不可用", icon: "none" })
     }
@@ -54,6 +57,15 @@ Page({
     } catch (error) {
       wx.showToast({ title: "重置失败", icon: "none" })
     }
+  },
+
+  async stepOrder(e) {
+    const { id, status } = e.currentTarget.dataset
+    try {
+      await updateOrderStatus(id, status)
+      await this.refresh()
+    } catch (error) {
+      wx.showToast({ title: error.message || "更新失败", icon: "none" })
+    }
   }
 })
-

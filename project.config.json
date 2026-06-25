@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "miniprogram/",
   "projectname": "炖时光微信小程序",
-  "description": "炖时光门店点单、预订、会员和库存管理",
+  "description": "炖时光门店点单、库存、会员和店长管理",
   "appid": "touristappid",
   "setting": {
     "urlCheck": false,

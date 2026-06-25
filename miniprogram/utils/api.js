@@ -50,6 +50,13 @@ function createOrder(payload) {
   })
 }
 
+function updateOrderStatus(orderId, status) {
+  return request(`/orders/${orderId}`, {
+    method: "PATCH",
+    data: { status }
+  })
+}
+
 function getMember() {
   return request("/member")
 }
@@ -69,8 +76,8 @@ module.exports = {
   updateProductStock,
   getOrders,
   createOrder,
+  updateOrderStatus,
   getMember,
   getDashboard,
   resetDemo
 }
-
