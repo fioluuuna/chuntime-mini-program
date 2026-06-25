@@ -3,7 +3,7 @@ const { catalog, discounted, toPriceText } = require("../../utils/pricing")
 Page({
   data: {
     shop: catalog.shop,
-    poster: "/assets/images/menu-poster.jpg",
+    poster: catalog.images.menuPoster,
     soups: catalog.soups.map((item) => ({
       ...item,
       salePrice: toPriceText(discounted(item.price, catalog.shop.discountRate)),
@@ -22,4 +22,3 @@ Page({
     })
   },
 })
-

@@ -9,6 +9,10 @@ module.exports = {
     discountRate: 0.88,
     openingDiscountText: "开业 88 折，优惠期 10 天",
   },
+  images: {
+    menuPoster: "/assets/images/menu-poster-web.jpg",
+    route: "/assets/images/store-route.jpg",
+  },
   highlights: [
     { label: "现做现炖", value: "当日新鲜出餐" },
     { label: "配送", value: "金山谷 / 保利 / 意库" },
@@ -122,4 +126,3 @@ module.exports = {
     { id: "A105", name: "王女士", item: "凉瓜汤", status: "待取餐" },
   ],
 }
-

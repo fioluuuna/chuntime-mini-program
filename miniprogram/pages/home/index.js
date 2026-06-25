@@ -9,8 +9,8 @@ Page({
       salePrice: toPriceText(discounted(item.price, catalog.shop.discountRate)),
       originalText: toPriceText(item.price),
     })),
-    routeImage: "/assets/images/store-route.jpg",
-    menuPoster: "/assets/images/menu-poster.jpg",
+    routeImage: catalog.images.route,
+    menuPoster: catalog.images.menuPoster,
   },
   goTo(e) {
     const page = e.currentTarget.dataset.page
@@ -23,4 +23,3 @@ Page({
     })
   },
 })
-
