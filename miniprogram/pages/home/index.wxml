@@ -5,7 +5,7 @@
   </view>
 
   <view class="card hero">
-    <image class="image hero-image" src="{{menuPoster}}" mode="aspectFill"></image>
+    <image class="image hero-image" src="{{heroImage}}" mode="aspectFill"></image>
     <view class="hero-mask"></view>
     <view class="hero-content">
       <view class="hero-title">{{shop.name}}</view>
@@ -36,10 +36,10 @@
         <view class="quick-title">会员权益</view>
         <view class="quick-desc">积分、储值、老客券包</view>
       </view>
-      <view class="quick-item" bindtap="goTo" data-page="admin">
-        <view class="icon-circle">店</view>
-        <view class="quick-title">店长后台</view>
-        <view class="quick-desc">库存、订单、数据分析</view>
+      <view class="quick-item" bindtap="previewQr">
+        <view class="icon-circle">联</view>
+        <view class="quick-title">联系店长</view>
+        <view class="quick-desc">可扫码添加微信咨询或售后</view>
       </view>
     </view>
   </view>
@@ -50,6 +50,14 @@
       <view class="feature-label">{{item.title}}</view>
       <view class="muted mt-8">{{item.desc}}</view>
     </view>
+  </view>
+
+  <view class="card">
+    <view class="section-head">
+      <view class="section-title">菜单海报</view>
+      <view class="muted">可放大查看完整价格</view>
+    </view>
+    <image class="image" src="{{menuPoster}}" mode="widthFix"></image>
   </view>
 
   <view class="card">
@@ -83,5 +91,14 @@
       <view class="btn btn-ghost" bindtap="copyAddress">复制地址</view>
       <view class="btn" bindtap="callShop">拨打电话</view>
     </view>
+  </view>
+
+  <view class="card">
+    <view class="section-head">
+      <view class="section-title">联系店长</view>
+      <view class="tag">扫码咨询</view>
+    </view>
+    <image class="qr-image" src="{{ownerQrImage}}" mode="widthFix" bindtap="previewQr"></image>
+    <view class="muted mt-12">如需改单、咨询配送或售后，可直接扫码联系店长。</view>
   </view>
 </view>

@@ -1,0 +1,9 @@
+<view class="page">
+  <view class="card">
+    <view class="title">店长登录</view>
+    <view class="subtitle mt-8">这里是店长专用后台入口，顾客端首页不会显示。</view>
+    <input class="login-input" password placeholder="请输入店长口令" bindinput="bindInput" value="{{code}}" />
+    <view class="btn mt-20" bindtap="submit">{{loading ? '登录中...' : '进入后台'}}</view>
+    <view class="muted mt-16">当前版本使用店长口令验证，后续可升级为店长微信身份验证。</view>
+  </view>
+</view>

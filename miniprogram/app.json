@@ -4,9 +4,10 @@
     "pages/menu/index",
     "pages/order/index",
     "pages/member/index",
+    "pages/payment/index",
+    "pages/owner-login/index",
     "pages/admin/index",
-    "pages/store/index",
-    "pages/combo/index"
+    "pages/store/index"
   ],
   "window": {
     "navigationBarTitleText": "炖时光",

@@ -12,7 +12,7 @@
 .hero-mask {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(22, 12, 7, 0.74));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(22, 12, 7, 0.78));
 }
 
 .hero-content {
@@ -103,4 +103,10 @@
 
 .route-preview {
   border: 1rpx solid #efe6da;
+}
+
+.qr-image {
+  width: 280rpx;
+  margin: 0 auto;
+  display: block;
 }

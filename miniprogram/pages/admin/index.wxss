@@ -13,19 +13,62 @@
   margin-top: 12rpx;
 }
 
-.stock-row {
-  padding: 16rpx 0;
+.alert-box {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  background: #fff0db;
+}
+
+.alert-title {
+  color: #be6719;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.module-chips,
+.order-filters,
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.module-chip,
+.filter-chip,
+.status-btn {
+  padding: 12rpx 18rpx;
+  border-radius: 999rpx;
+  background: #f7f2ea;
+  color: #5d4a39;
+  font-size: 22rpx;
+}
+
+.module-chip-active,
+.filter-chip-active,
+.status-btn-primary {
+  background: #315a33;
+  color: #fff;
+}
+
+.stock-row,
+.order-admin-row,
+.supply-row,
+.analytics-block {
+  padding: 18rpx 0;
   border-bottom: 1rpx solid #f2ebe3;
 }
 
-.stock-row:last-child {
+.stock-row:last-child,
+.order-admin-row:last-child,
+.supply-row:last-child,
+.analytics-block:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
 .stock-name {
   font-weight: 700;
-  margin-bottom: 6rpx;
 }
 
 .stock-controls {
@@ -43,65 +86,48 @@
   justify-content: center;
 }
 
-.admin-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16rpx;
-}
-
-.action-item {
-  padding: 18rpx;
-  border-radius: 18rpx;
-  background: #f8f4ee;
-}
-
-.action-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  margin-bottom: 6rpx;
-}
-
-.order-admin-row {
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid #f2ebe3;
-}
-
-.order-admin-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
 .status-pill {
   padding: 10rpx 16rpx;
   border-radius: 999rpx;
-  background: #eef6ef;
-  color: #35613d;
   font-size: 22rpx;
   flex-shrink: 0;
 }
 
-.status-actions {
+.status-pill-待付款 {
+  background: #fff0db;
+  color: #be6719;
+}
+
+.status-pill-待确认 {
+  background: #eef4ff;
+  color: #3d62a8;
+}
+
+.status-pill-已完成,
+.status-pill-正常 {
+  background: #eef6ef;
+  color: #35613d;
+}
+
+.status-pill-需补货 {
+  background: #ffe2de;
+  color: #c84733;
+}
+
+.order-detail {
+  flex: 1;
+}
+
+.supply-controls {
   display: flex;
+  gap: 28rpx;
   flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
   gap: 12rpx;
-}
-
-.status-btn {
-  padding: 10rpx 16rpx;
-  border-radius: 999rpx;
-  background: #f7f2ea;
-  color: #5d4a39;
-  font-size: 22rpx;
-}
-
-.analytics-block {
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid #f2ebe3;
-}
-
-.analytics-block:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
 }
 
 .analytics-title {

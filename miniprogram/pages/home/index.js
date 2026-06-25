@@ -41,6 +41,8 @@ Page({
     shop: catalog.shop,
     routeImage: catalog.images.route,
     menuPoster: catalog.images.menuPoster,
+    heroImage: "/assets/images/dish-05.jpg",
+    ownerQrImage: "/assets/images/owner-qr.png",
     availableCount: 0,
     soups: [],
     featuredCards: [],
@@ -71,5 +73,11 @@ Page({
   },
   callShop() {
     wx.makePhoneCall({ phoneNumber: this.data.shop.phone })
+  },
+  previewQr() {
+    wx.previewImage({
+      current: this.data.ownerQrImage,
+      urls: [this.data.ownerQrImage],
+    })
   }
 })

@@ -20,8 +20,8 @@ Page({
     serviceMode: "remote",
     categories: [
       { key: "soup", label: "炖汤" },
-      { key: "combo", label: "套餐" },
       { key: "noodle", label: "面食" },
+      { key: "combo", label: "套餐" },
     ],
     activeCategory: "soup",
     soups: [],

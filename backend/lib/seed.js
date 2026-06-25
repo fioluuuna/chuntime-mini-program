@@ -8,7 +8,10 @@ const defaultStore = {
     deliveryFee: 3,
     discountRate: 0.88,
     openingDiscountText: "开业 88 折，优惠期 10 天",
-    saleMode: "preorder"
+    saleMode: "preorder",
+    paymentQrImage: "/assets/images/owner-qr.png",
+    paymentTips: "当前测试页先使用店长二维码占位。正式营业前，请替换成店长个人收款码图片；顾客转账后再点击“我已付款”。",
+    ownerAccessCode: "888888"
   },
   products: [
     {
@@ -111,6 +114,11 @@ const defaultStore = {
       stock: 20
     }
   ],
+  supplies: [
+    { id: "supply-box", name: "炖汤打包盒", stock: 7, warningLine: 10, unit: "个" },
+    { id: "supply-bag", name: "打包袋", stock: 26, warningLine: 10, unit: "个" },
+    { id: "supply-cutlery", name: "餐具", stock: 40, warningLine: 15, unit: "份" }
+  ],
   member: {
     points: 1260,
     balance: 300,
@@ -136,7 +144,7 @@ const defaultStore = {
         { productId: "noodle-01", productName: "葱油菠菜面", quantity: 1, price: 8.71, originalPrice: 9.9 }
       ],
       totals: { subtotal: 27.9, discountedSubtotal: 24.55, shipping: 3, savings: 3.35, total: 27.55 },
-      status: "待接单",
+      status: "待确认",
       createdAt: "2026/06/25 10:32:00"
     },
     {
@@ -174,7 +182,7 @@ const defaultStore = {
         }
       ],
       totals: { subtotal: 30.9, discountedSubtotal: 27.19, shipping: 3, savings: 3.71, total: 30.19 },
-      status: "备餐中",
+      status: "待付款",
       createdAt: "2026/06/25 11:08:00"
     }
   ]

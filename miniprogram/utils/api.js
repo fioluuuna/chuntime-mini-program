@@ -47,6 +47,17 @@ function getConfig() {
   return withFallback(() => request("/config"), () => localDb.getConfig())
 }
 
+function ownerLogin(code) {
+  return withFallback(
+    () =>
+      request("/owner-login", {
+        method: "POST",
+        data: { code }
+      }),
+    () => localDb.ownerLogin(code)
+  )
+}
+
 function getProducts() {
   return withFallback(() => request("/products"), () => localDb.getProducts())
 }
@@ -66,6 +77,10 @@ function getOrders() {
   return withFallback(() => request("/orders"), () => localDb.getOrders())
 }
 
+function getOrderById(orderId) {
+  return withFallback(() => request(`/orders/${orderId}`), () => localDb.getOrderById(orderId))
+}
+
 function createOrder(payload) {
   return withFallback(
     () =>
@@ -74,6 +89,16 @@ function createOrder(payload) {
         data: payload
       }),
     () => localDb.createOrder(payload)
+  )
+}
+
+function markOrderPaid(orderId) {
+  return withFallback(
+    () =>
+      request(`/orders/${orderId}/mark-paid`, {
+        method: "POST"
+      }),
+    () => localDb.markOrderPaid(orderId)
   )
 }
 
@@ -92,6 +117,21 @@ function getMember() {
   return withFallback(() => request("/member"), () => localDb.getMember())
 }
 
+function getSupplies() {
+  return withFallback(() => request("/supplies"), () => localDb.getSupplies())
+}
+
+function updateSupply(supplyId, payload) {
+  return withFallback(
+    () =>
+      request(`/supplies/${supplyId}`, {
+        method: "PATCH",
+        data: payload
+      }),
+    () => localDb.updateSupply(supplyId, payload)
+  )
+}
+
 function getDashboard() {
   return withFallback(() => request("/dashboard"), () => localDb.getDashboard())
 }
@@ -107,10 +147,15 @@ module.exports = {
   BASE_URL,
   request,
   getConfig,
+  ownerLogin,
   getProducts,
   updateProductStock,
+  getSupplies,
+  updateSupply,
   getOrders,
+  getOrderById,
   createOrder,
+  markOrderPaid,
   updateOrderStatus,
   getMember,
   getDashboard,

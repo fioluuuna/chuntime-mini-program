@@ -1,0 +1,23 @@
+.payment-amount {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: #b0371b;
+  margin: 18rpx 0 10rpx;
+}
+
+.payment-qr {
+  width: 360rpx;
+  margin: 12rpx auto 0;
+  display: block;
+}
+
+.status-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #fff0db;
+  color: #c26b1a;
+  font-weight: 700;
+}

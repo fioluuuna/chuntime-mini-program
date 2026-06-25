@@ -1,5 +1,5 @@
 <view class="page">
-  <view class="card member-card">
+  <view class="card member-card" bindlongpress="openOwnerLogin">
     <view class="section-head">
       <view>
         <view class="title member-title">我的</view>

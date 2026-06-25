@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="card" wx:if="{{order}}">
+    <view class="title">订单待付款</view>
+    <view class="subtitle mt-8">请先扫码转账，再点击“我已付款”，店长核实后会手动确认。</view>
+    <view class="pill mt-20">{{order.id}}</view>
+  </view>
+
+  <view class="card" wx:if="{{order}}">
+    <view class="section-title">付款信息</view>
+    <view class="payment-amount">¥{{order.totals.total}}</view>
+    <view class="muted">请按订单金额付款，避免店长核对困难。</view>
+  </view>
+
+  <view class="card" wx:if="{{order}}">
+    <view class="section-head">
+      <view class="section-title">店长收款码</view>
+      <view class="muted">点图可放大</view>
+    </view>
+    <image class="payment-qr" src="{{shop.paymentQrImage}}" mode="widthFix" bindtap="previewQr"></image>
+    <view class="muted mt-16">{{shop.paymentTips}}</view>
+  </view>
+
+  <view class="card" wx:if="{{order}}">
+    <view class="section-title">当前状态</view>
+    <view class="status-box">{{order.status}}</view>
+    <view wx:if="{{order.status === '待付款'}}" class="btn mt-20" bindtap="confirmPaid">我已付款</view>
+    <view wx:elif="{{order.status === '待确认'}}" class="muted mt-16">已提交付款通知，请等店长确认收款。</view>
+    <view wx:else class="muted mt-16">店长已确认收款，订单已完成。</view>
+    <view class="btn btn-ghost mt-20" bindtap="goOrders">返回订单页</view>
+  </view>
+</view>

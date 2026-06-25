@@ -1,0 +1,8 @@
+.login-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f7f2ea;
+  border-radius: 18rpx;
+  padding: 20rpx;
+  margin-top: 24rpx;
+}

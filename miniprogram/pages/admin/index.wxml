@@ -1,11 +1,18 @@
 <view class="page">
   <view class="card">
-    <view class="title">店长后台</view>
-    <view class="subtitle">手机上就能看订单、看库存、看日报，不需要导出表格也能先管起来。</view>
-    <view class="mt-16">
-      <text class="pill">仅库存确认</text>
-      <text class="pill">仅售罄控制</text>
-      <text class="pill">手机日报</text>
+    <view class="section-head">
+      <view>
+        <view class="title">店长后台</view>
+        <view class="subtitle">顾客端看不到这里。这里专门处理订单、库存、耗材和日报。</view>
+      </view>
+      <view class="btn btn-ghost" bindtap="logout">退出</view>
+    </view>
+
+    <view wx:if="{{supplyAlerts.length}}" class="alert-box">
+      <view class="alert-title">耗材预警</view>
+      <view wx:for="{{supplyAlerts}}" wx:key="id" class="muted mt-8">
+        {{item.name}} 仅剩 {{item.stock}}{{item.unit}}，低于预警线 {{item.warningLine}}{{item.unit}}
+      </view>
     </view>
   </view>
 
@@ -17,13 +24,48 @@
   </view>
 
   <view class="card">
-    <view class="section-title">库存确认</view>
-    <view class="muted mb-16">这里只保留“确认库存”和“售罄控制”，不自动算采购需求。</view>
-    <view wx:for="{{stocks}}" wx:key="name" class="stock-row">
+    <view class="module-chips">
+      <view class="module-chip {{activeModule === 'orders' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="orders">订单管理</view>
+      <view class="module-chip {{activeModule === 'products' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="products">菜品库存</view>
+      <view class="module-chip {{activeModule === 'supplies' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="supplies">耗材管理</view>
+      <view class="module-chip {{activeModule === 'report' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="report">日报统计</view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{activeModule === 'orders'}}">
+    <view class="section-head">
+      <view class="section-title">订单管理</view>
+      <view class="order-filters">
+        <view class="filter-chip {{orderFilter === '全部' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="全部">全部</view>
+        <view class="filter-chip {{orderFilter === '待付款' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="待付款">待付款</view>
+        <view class="filter-chip {{orderFilter === '待确认' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="待确认">待确认</view>
+        <view class="filter-chip {{orderFilter === '已完成' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="已完成">已完成</view>
+      </view>
+    </view>
+    <view wx:for="{{visibleOrders}}" wx:key="id" class="order-admin-row">
+      <view class="row space-between align-start">
+        <view class="order-detail">
+          <view class="stock-name">{{item.id}} · {{item.name}}</view>
+          <view class="muted mt-8">{{item.fulfillmentType}} · {{item.address}}</view>
+          <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
+        </view>
+        <view class="status-pill status-pill-{{item.status}}">{{item.status}}</view>
+      </view>
+      <view class="status-actions mt-16">
+        <view wx:if="{{item.status === '待付款'}}" class="status-btn">等待顾客付款</view>
+        <view wx:if="{{item.status === '待确认'}}" class="status-btn status-btn-primary" bindtap="stepOrder" data-id="{{item.id}}" data-status="已完成">确认收款</view>
+        <view wx:if="{{item.status !== '已完成'}}" class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="已完成">直接完成</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{activeModule === 'products'}}">
+    <view class="section-title">菜品库存管理</view>
+    <view wx:for="{{stocks}}" wx:key="id" class="stock-row">
       <view class="row space-between">
         <view>
           <view class="stock-name">{{item.name}}</view>
-          <view class="muted">剩余 {{item.remaining}} / 总 {{item.stock}}</view>
+          <view class="muted">{{item.category === 'soup' ? '炖汤' : '面食'}} · 当前库存 {{item.stock}}</view>
         </view>
         <view class="stock-controls">
           <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="-1">-</view>
@@ -33,14 +75,44 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="section-title">手机日报</view>
-    <view class="muted">{{reportText}}</view>
-    <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
+  <view class="card" wx:if="{{activeModule === 'supplies'}}">
+    <view class="section-head">
+      <view class="section-title">耗材管理</view>
+      <view class="muted">可设置库存和预警线</view>
+    </view>
+    <view wx:for="{{supplies}}" wx:key="id" class="supply-row">
+      <view class="row space-between align-start">
+        <view>
+          <view class="stock-name">{{item.name}}</view>
+          <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
+          <view class="muted mt-8">{{item.status}}</view>
+        </view>
+        <view class="status-pill status-pill-{{item.status}}">{{item.status}}</view>
+      </view>
+      <view class="supply-controls mt-16">
+        <view class="control-group">
+          <view class="muted">改库存</view>
+          <view class="stock-controls">
+            <view class="stock-btn" bindtap="changeSupplyStock" data-id="{{item.id}}" data-delta="-1">-</view>
+            <view class="stock-btn" bindtap="changeSupplyStock" data-id="{{item.id}}" data-delta="1">+</view>
+          </view>
+        </view>
+        <view class="control-group">
+          <view class="muted">改预警线</view>
+          <view class="stock-controls">
+            <view class="stock-btn" bindtap="changeSupplyWarning" data-id="{{item.id}}" data-delta="-1">-</view>
+            <view class="stock-btn" bindtap="changeSupplyWarning" data-id="{{item.id}}" data-delta="1">+</view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 
-  <view class="card">
-    <view class="section-title">数据分析</view>
+  <view class="card" wx:if="{{activeModule === 'report'}}">
+    <view class="section-title">日报统计</view>
+    <view class="muted">{{reportText}}</view>
+    <view class="btn mt-20" bindtap="copyReport">一键复制今日汇总</view>
+
     <view class="analytics-block">
       <view class="analytics-title">哪个汤最受欢迎</view>
       <view wx:for="{{analytics.topSoups}}" wx:key="name" class="analytics-row">
@@ -48,6 +120,7 @@
         <text>{{item.count}} 份</text>
       </view>
     </view>
+
     <view class="analytics-block">
       <view class="analytics-title">哪个时段下单最多</view>
       <view wx:for="{{analytics.topHours}}" wx:key="hour" class="analytics-row">
@@ -55,6 +128,7 @@
         <text>{{item.count}} 单</text>
       </view>
     </view>
+
     <view class="analytics-block">
       <view class="analytics-title">高复购顾客</view>
       <view wx:for="{{analytics.topCustomers}}" wx:key="phone" class="analytics-row">
@@ -65,41 +139,7 @@
   </view>
 
   <view class="card">
-    <view class="section-title">订单流转</view>
-    <view wx:for="{{orders}}" wx:key="id" class="order-admin-row">
-      <view class="row space-between">
-        <view>
-          <view class="stock-name">{{item.id}} · {{item.name}}</view>
-          <view class="muted">{{item.fulfillmentType}} · {{item.createdAt}}</view>
-          <view class="muted mt-8">金额 ¥{{item.totals.total}}</view>
-        </view>
-        <view class="status-pill">{{item.status}}</view>
-      </view>
-      <view class="status-actions mt-16">
-        <view class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="待接单">待接单</view>
-        <view class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="备餐中">备餐中</view>
-        <view class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="待取餐/配送中">待取餐</view>
-        <view class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="已完成">完成</view>
-      </view>
-    </view>
-  </view>
-
-  <view class="card">
     <view class="section-title">店长常用动作</view>
-    <view class="admin-actions">
-      <view class="action-item">
-        <view class="action-title">改库存</view>
-        <view class="muted">随时手动修改剩余份数</view>
-      </view>
-      <view class="action-item">
-        <view class="action-title">看订单</view>
-        <view class="muted">查看待接单、备餐中、待取餐</view>
-      </view>
-      <view class="action-item">
-        <view class="action-title">看会员</view>
-        <view class="muted">看积分、储值和券包情况</view>
-      </view>
-    </view>
-    <view class="btn mt-20" bindtap="resetDemoData">重置演示数据</view>
+    <view class="btn" bindtap="resetDemoData">重置演示数据</view>
   </view>
 </view>

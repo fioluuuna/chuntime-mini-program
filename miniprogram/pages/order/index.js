@@ -1,15 +1,21 @@
 const { catalog, toPriceText } = require("../../utils/pricing")
 const { getOrders, createOrder, getConfig, getServiceMode } = require("../../utils/api")
-const { ensureState, getCart, updateCartQuantity, clearCart, calculateCartTotals } = require("../../utils/state")
+const {
+  ensureState,
+  getCart,
+  updateCartQuantity,
+  clearCart,
+  calculateCartTotals,
+  getOwnedOrderIds,
+  addOwnedOrderId
+} = require("../../utils/state")
 
 Page({
   data: {
     shop: catalog.shop,
     serviceMode: "remote",
     cart: [],
-    orders: [],
-    filteredOrders: [],
-    orderFilter: "全部",
+    myOrders: [],
     areaOptions: ["金山谷", "保利", "意库"],
     fulfillmentType: "配送",
     customerName: "顾客",
@@ -27,15 +33,13 @@ Page({
 
   async onShow() {
     ensureState()
-    let config = this.data.shop
-    const orders = await getOrders()
-    config = await getConfig()
+    const [config, orders] = await Promise.all([getConfig(), getOrders()])
+    const ownedIds = getOwnedOrderIds()
     this.setData({
       shop: { ...this.data.shop, ...config },
-      orders,
+      myOrders: orders.filter((item) => ownedIds.includes(item.id)),
       serviceMode: getServiceMode(),
     })
-    this.applyOrderFilter()
     this.refreshCart()
   },
 
@@ -53,15 +57,6 @@ Page({
         ...totals
       }
     })
-  },
-
-  applyOrderFilter() {
-    const filter = this.data.orderFilter
-    const filteredOrders = this.data.orders.filter((item) => {
-      if (filter === "全部") return true
-      return item.fulfillmentType === filter
-    })
-    this.setData({ filteredOrders })
   },
 
   plusItem(e) {
@@ -92,13 +87,13 @@ Page({
     this.setData({ address: e.currentTarget.dataset.area })
   },
 
-  changeOrderFilter(e) {
-    this.setData({ orderFilter: e.currentTarget.dataset.filter })
-    this.applyOrderFilter()
-  },
-
   goMenu() {
     wx.switchTab({ url: "/pages/menu/index" })
+  },
+
+  goPayment(e) {
+    const orderId = e.currentTarget.dataset.id
+    wx.navigateTo({ url: `/pages/payment/index?orderId=${orderId}` })
   },
 
   async submitOrder() {
@@ -111,7 +106,7 @@ Page({
       return
     }
     try {
-      await createOrder({
+      const order = await createOrder({
         customerName: this.data.customerName,
         phone: this.data.phone,
         fulfillmentType: this.data.fulfillmentType,
@@ -120,11 +115,10 @@ Page({
         items: this.data.cart,
         totals: this.data.totals
       })
+      addOwnedOrderId(order.id)
       clearCart()
-      wx.showToast({ title: "下单成功", icon: "success" })
-      const orders = await getOrders()
-      this.setData({ orders, remark: "" })
-      this.applyOrderFilter()
+      wx.navigateTo({ url: `/pages/payment/index?orderId=${order.id}` })
+      this.setData({ remark: "" })
       this.refreshCart()
     } catch (error) {
       wx.showToast({ title: error.message || "下单失败", icon: "none" })

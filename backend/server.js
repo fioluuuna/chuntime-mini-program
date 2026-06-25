@@ -40,9 +40,29 @@ function readJson(req) {
   })
 }
 
+function getPublicConfig(config) {
+  return {
+    shopName: config.shopName,
+    address: config.address,
+    phone: config.phone,
+    hours: config.hours,
+    deliveryAreas: config.deliveryAreas,
+    deliveryFee: config.deliveryFee,
+    discountRate: config.discountRate,
+    openingDiscountText: config.openingDiscountText,
+    saleMode: config.saleMode,
+    paymentQrImage: config.paymentQrImage,
+    paymentTips: config.paymentTips
+  }
+}
+
+function getSupplyStatus(item) {
+  return item.stock <= item.warningLine ? "需补货" : "正常"
+}
+
 function buildDashboard(store) {
-  const totalRevenue = store.orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0)
-  const preorderCount = store.orders.filter((order) => order.status !== "已完成").length
+  const totalRevenue = store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0)
+  const pendingCount = store.orders.filter((order) => order.status !== "已完成").length
   const soupMap = {}
   const hourMap = {}
   const customerMap = {}
@@ -76,22 +96,27 @@ function buildDashboard(store) {
     }
   }
 
+  const supplies = (store.supplies || []).map((item) => ({
+    ...item,
+    status: getSupplyStatus(item)
+  }))
+
   return {
     summaryCards: [
       { label: "累计订单", value: store.orders.length },
       { label: "累计销售额", value: `¥${totalRevenue.toFixed(2)}` },
-      { label: "待处理订单", value: preorderCount },
-      { label: "在售库存", value: store.products.reduce((sum, item) => sum + item.stock, 0) }
+      { label: "待处理订单", value: pendingCount },
+      { label: "耗材预警", value: supplies.filter((item) => item.status === "需补货").length }
     ],
-    stocks: store.products
-      .filter((item) => item.category === "soup")
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        reserved: 0,
-        stock: item.stock,
-        remaining: item.stock
-      })),
+    stocks: store.products.map((item) => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      stock: item.stock,
+      remaining: item.stock
+    })),
+    supplies,
+    supplyAlerts: supplies.filter((item) => item.status === "需补货"),
     analytics: {
       topSoups: Object.keys(soupMap)
         .map((name) => ({ name, count: soupMap[name] }))
@@ -112,7 +137,7 @@ function buildDashboard(store) {
           amount: `¥${item.amount.toFixed(2)}`
         }))
     },
-    reportText: "先确认库存，再根据当日接单情况手动开售。后台保留数据分析、库存确认和订单流转，不强行做采购推算。"
+    reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。"
   }
 }
 
@@ -121,7 +146,18 @@ function updateOrderStatus(store, orderId, status) {
   if (!order) {
     throw new Error("订单不存在")
   }
+  const previousStatus = order.status
   order.status = status
+  if (status === "已完成" && previousStatus !== "已完成") {
+    store.member.points += Math.floor(Number(order.totals?.total || 0))
+    store.member.orderCount += 1
+    store.member.lastOrderAt = order.createdAt
+    if (store.member.orderCount >= 10) {
+      store.member.membership = "金卡会员"
+    } else if (store.member.orderCount >= 5) {
+      store.member.membership = "银卡会员"
+    }
+  }
   return order
 }
 
@@ -135,15 +171,16 @@ function applyOrder(store, payload) {
     if (item.parts?.length) {
       for (const part of item.parts) {
         const product = store.products.find((entry) => entry.id === part.productId)
-        if (!product || product.stock < part.quantity) {
+        if (!product || product.stock < part.quantity * item.quantity) {
           throw new Error(`${part.productName} 库存不足`)
         }
       }
-    } else {
-      const product = store.products.find((entry) => entry.id === item.productId)
-      if (product && product.stock < item.quantity) {
-        throw new Error(`${item.productName} 库存不足`)
-      }
+      continue
+    }
+
+    const product = store.products.find((entry) => entry.id === item.productId)
+    if (product && product.stock < item.quantity) {
+      throw new Error(`${item.productName} 库存不足`)
     }
   }
 
@@ -151,13 +188,37 @@ function applyOrder(store, payload) {
     if (item.parts?.length) {
       for (const part of item.parts) {
         const product = store.products.find((entry) => entry.id === part.productId)
-        product.stock -= part.quantity
+        product.stock -= part.quantity * item.quantity
       }
-    } else {
-      const product = store.products.find((entry) => entry.id === item.productId)
-      if (product) {
-        product.stock -= item.quantity
+      continue
+    }
+
+    const product = store.products.find((entry) => entry.id === item.productId)
+    if (product) {
+      product.stock -= item.quantity
+    }
+  }
+
+  if (store.supplies?.length) {
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
+    const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
+    if (hasSoup) {
+      const box = store.supplies.find((item) => item.id === "supply-box")
+      if (box) {
+        box.stock = Math.max(0, box.stock - totalQuantity)
       }
+    }
+
+    if (payload.fulfillmentType === "配送") {
+      const bag = store.supplies.find((item) => item.id === "supply-bag")
+      if (bag) {
+        bag.stock = Math.max(0, bag.stock - 1)
+      }
+    }
+
+    const cutlery = store.supplies.find((item) => item.id === "supply-cutlery")
+    if (cutlery) {
+      cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
     }
   }
 
@@ -170,19 +231,11 @@ function applyOrder(store, payload) {
     remark: payload.remark || "",
     items,
     totals: payload.totals,
-    status: "待接单",
+    status: "待付款",
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
   }
 
   store.orders.unshift(order)
-  store.member.points += Math.floor(payload.totals?.total || 0)
-  store.member.orderCount += 1
-  store.member.lastOrderAt = order.createdAt
-  if (store.member.orderCount >= 10) {
-    store.member.membership = "金卡会员"
-  } else if (store.member.orderCount >= 5) {
-    store.member.membership = "银卡会员"
-  }
   return order
 }
 
@@ -202,7 +255,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/config") {
-      sendJson(res, 200, store.config)
+      sendJson(res, 200, getPublicConfig(store.config))
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/owner-login") {
+      const payload = await readJson(req)
+      if (String(payload.code || "") !== String(store.config.ownerAccessCode || "")) {
+        sendJson(res, 401, { error: "店长口令不正确" })
+        return
+      }
+      sendJson(res, 200, { ok: true })
       return
     }
 
@@ -227,8 +290,43 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === "GET" && url.pathname === "/api/supplies") {
+      sendJson(res, 200, (store.supplies || []).map((item) => ({ ...item, status: getSupplyStatus(item) })))
+      return
+    }
+
+    if (req.method === "PATCH" && url.pathname.startsWith("/api/supplies/")) {
+      const supplyId = url.pathname.split("/").pop()
+      const payload = await readJson(req)
+      const supply = (store.supplies || []).find((item) => item.id === supplyId)
+      if (!supply) {
+        notFound(res)
+        return
+      }
+      if (typeof payload.stock === "number") {
+        supply.stock = Math.max(0, payload.stock)
+      }
+      if (typeof payload.warningLine === "number") {
+        supply.warningLine = Math.max(0, payload.warningLine)
+      }
+      writeStore(store)
+      sendJson(res, 200, { ...supply, status: getSupplyStatus(supply) })
+      return
+    }
+
     if (req.method === "GET" && url.pathname === "/api/orders") {
       sendJson(res, 200, store.orders)
+      return
+    }
+
+    if (req.method === "GET" && /^\/api\/orders\/[^/]+$/.test(url.pathname)) {
+      const orderId = url.pathname.split("/").pop()
+      const order = store.orders.find((item) => item.id === orderId)
+      if (!order) {
+        notFound(res)
+        return
+      }
+      sendJson(res, 200, order)
       return
     }
 
@@ -240,10 +338,18 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    if (req.method === "PATCH" && url.pathname.startsWith("/api/orders/")) {
+    if (req.method === "POST" && /^\/api\/orders\/[^/]+\/mark-paid$/.test(url.pathname)) {
+      const orderId = url.pathname.split("/")[3]
+      const order = updateOrderStatus(store, orderId, "待确认")
+      writeStore(store)
+      sendJson(res, 200, order)
+      return
+    }
+
+    if (req.method === "PATCH" && /^\/api\/orders\/[^/]+$/.test(url.pathname)) {
       const orderId = url.pathname.split("/").pop()
       const payload = await readJson(req)
-      const order = updateOrderStatus(store, orderId, payload.status || "待接单")
+      const order = updateOrderStatus(store, orderId, payload.status || "待付款")
       writeStore(store)
       sendJson(res, 200, order)
       return

@@ -3,7 +3,7 @@
     <view class="section-head">
       <view>
         <view class="title">订单</view>
-        <view class="subtitle">购物车、提交订单、查看最近订单都在这里</view>
+        <view class="subtitle">先下单，再扫码付款，付款后点“我已付款”等店长确认。</view>
       </view>
       <view class="tag">{{serviceMode === 'local' ? '演示模式' : '联调模式'}}</view>
     </view>
@@ -76,30 +76,31 @@
     <view class="result-row"><text>配送费</text><text>¥{{totals.shippingText}}</text></view>
     <view class="result-row"><text>本单已省</text><text>¥{{totals.savingsText}}</text></view>
     <view class="result-row"><text>应付金额</text><text class="price">¥{{totals.totalText}}</text></view>
-    <view class="btn mt-20" bindtap="submitOrder">提交订单</view>
+    <view class="btn mt-20" bindtap="submitOrder">提交订单并去付款</view>
   </view>
 
   <view class="card">
     <view class="section-head">
-      <view class="section-title">最近订单</view>
-      <view class="filters">
-        <view class="filter-chip {{orderFilter === '全部' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="全部">全部</view>
-        <view class="filter-chip {{orderFilter === '配送' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="配送">配送</view>
-        <view class="filter-chip {{orderFilter === '自提' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="自提">自提</view>
-      </view>
+      <view class="section-title">我的订单</view>
+      <view class="muted">这里只显示你自己提交过的订单</view>
     </view>
-    <view wx:if="{{filteredOrders.length === 0}}" class="orders-empty">
+    <view wx:if="{{myOrders.length === 0}}" class="orders-empty">
       <view class="empty-illus">单</view>
-      <view class="muted mt-12">您当前还没有订单</view>
+      <view class="muted mt-12">你还没有自己的订单记录</view>
     </view>
-    <view wx:for="{{filteredOrders}}" wx:key="id" class="order-row">
-      <view class="row space-between">
-        <view>
-          <view class="order-id">{{item.id}} · {{item.name}}</view>
-          <view class="muted mt-8">{{item.fulfillmentType}} · {{item.createdAt}}</view>
+    <view wx:for="{{myOrders}}" wx:key="id" class="order-row">
+      <view class="row space-between align-start">
+        <view class="order-main">
+          <view class="order-id">{{item.id}} · {{item.fulfillmentType}}</view>
+          <view class="muted mt-8">{{item.createdAt}}</view>
           <view class="muted mt-8">金额 ¥{{item.totals.total}}</view>
         </view>
-        <view class="status">{{item.status}}</view>
+        <view class="status status-{{item.status}}">{{item.status}}</view>
+      </view>
+      <view class="order-actions mt-16">
+        <view wx:if="{{item.status === '待付款'}}" class="btn btn-ghost" bindtap="goPayment" data-id="{{item.id}}">去付款</view>
+        <view wx:elif="{{item.status === '待确认'}}" class="muted">已提交付款，等待店长确认收款</view>
+        <view wx:else class="muted">订单已完成，可继续下单</view>
       </view>
     </view>
   </view>

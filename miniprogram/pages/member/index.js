@@ -49,5 +49,9 @@ Page({
       content: `${plan.desc}，${plan.extra}。后续接入商家微信支付后可直接在线充值。`,
       showCancel: false
     })
+  },
+
+  openOwnerLogin() {
+    wx.navigateTo({ url: "/pages/owner-login/index" })
   }
 })

@@ -48,7 +48,8 @@
   flex: 0 0 auto;
 }
 
-.cart-body {
+.cart-body,
+.order-main {
   flex: 1;
 }
 
@@ -128,28 +129,27 @@
 .status {
   padding: 10rpx 16rpx;
   border-radius: 999rpx;
-  background: #eef6ef;
-  color: #35613d;
   font-size: 22rpx;
   flex-shrink: 0;
 }
 
-.filters {
+.status-待付款 {
+  background: #fff0db;
+  color: #c26b1a;
+}
+
+.status-待确认 {
+  background: #eef4ff;
+  color: #3d62a8;
+}
+
+.status-已完成 {
+  background: #eef6ef;
+  color: #35613d;
+}
+
+.order-actions {
   display: flex;
-  gap: 12rpx;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
-}
-
-.filter-chip {
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  background: #f6efe4;
-  color: #6c5848;
-  font-size: 22rpx;
-}
-
-.filter-chip-active {
-  background: #ffe7d1;
-  color: #bc6b1d;
 }
