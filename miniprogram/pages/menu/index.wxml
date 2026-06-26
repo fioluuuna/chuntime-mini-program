@@ -1,5 +1,5 @@
-<view class="page">
-  <view class="card">
+<view class="page menu-page">
+  <view class="card menu-top-card">
     <view class="section-head">
       <view>
         <view class="title">今天想喝什么</view>
@@ -25,107 +25,97 @@
       </view>
     </view>
 
-    <scroll-view
-      class="menu-content-scroll"
-      scroll-y
-      enhanced
-      show-scrollbar="false"
-      scroll-with-animation
-      scroll-top="{{menuScrollTop}}"
-      bindscroll="handleMenuScroll"
-    >
-      <view class="menu-content">
-        <view class="card content-card section-anchor" id="section-soup">
-          <view class="section-head">
-            <view class="section-title">炖汤</view>
-            <view class="muted">显示剩余份数</view>
-          </view>
-          <view wx:for="{{soups}}" wx:key="id" class="menu-item">
-            <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
-            <view class="menu-body">
-              <view class="row space-between align-start">
-                <view class="menu-name">{{item.name}}</view>
-                <view class="price">¥{{item.salePriceText}}</view>
-              </view>
-              <view class="muted mt-8">{{item.desc}}</view>
-              <view class="row space-between mt-12 align-start">
-                <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
-                <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
-                  {{item.soldOut ? '售罄' : '+'}}
-                </view>
-              </view>
-            </view>
-          </view>
+    <view class="menu-content">
+      <view class="card content-card section-anchor" id="section-soup">
+        <view class="section-head">
+          <view class="section-title">炖汤</view>
+          <view class="muted">显示剩余份数</view>
         </view>
-
-        <view class="card content-card section-anchor" id="section-noodle">
-          <view class="section-head">
-            <view class="section-title">面食</view>
-            <view class="muted">也可以单独点</view>
-          </view>
-          <view wx:for="{{noodles}}" wx:key="id" class="menu-item">
-            <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
-            <view class="menu-body">
-              <view class="row space-between align-start">
-                <view class="menu-name">{{item.name}}</view>
-                <view class="price">¥{{item.salePriceText}}</view>
-              </view>
-              <view class="muted mt-8">{{item.desc}}</view>
-              <view class="row space-between mt-12 align-start">
-                <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
-                <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
-                  {{item.soldOut ? '售罄' : '+'}}
-                </view>
+        <view wx:for="{{soups}}" wx:key="id" class="menu-item">
+          <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="menu-body">
+            <view class="row space-between align-start">
+              <view class="menu-name">{{item.name}}</view>
+              <view class="price">¥{{item.salePriceText}}</view>
+            </view>
+            <view class="muted mt-8">{{item.desc}}</view>
+            <view class="row space-between mt-12 align-start">
+              <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
+              <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
+                {{item.soldOut ? '售罄' : '+'}}
               </view>
             </view>
-          </view>
-        </view>
-
-        <view class="card content-card section-anchor" id="section-combo">
-          <view class="section-title">套餐</view>
-          <view class="muted">任意选 1 份汤 + 1 份面，不需要备注，系统会直接算好价格。</view>
-
-          <view class="combo-section">
-            <view class="combo-label">先选汤</view>
-            <view class="chip-wrap">
-              <view
-                wx:for="{{soups}}"
-                wx:key="id"
-                class="choice-chip {{selectedSoupId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
-                bindtap="chooseComboSoup"
-                data-id="{{item.id}}"
-              >
-                {{item.name}}
-              </view>
-            </view>
-          </view>
-
-          <view class="combo-section">
-            <view class="combo-label">再选面</view>
-            <view class="chip-wrap">
-              <view
-                wx:for="{{noodles}}"
-                wx:key="id"
-                class="choice-chip {{selectedNoodleId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
-                bindtap="chooseComboNoodle"
-                data-id="{{item.id}}"
-              >
-                {{item.name}}
-              </view>
-            </view>
-          </view>
-
-          <view class="soft-panel mt-20" wx:if="{{comboSummary}}">
-            <view class="combo-row"><text>汤品</text><text>{{comboSummary.soup.name}}</text></view>
-            <view class="combo-row"><text>面食</text><text>{{comboSummary.noodle.name}}</text></view>
-            <view class="combo-row"><text>原价</text><text>¥{{comboSummary.originalText}}</text></view>
-            <view class="combo-row"><text>折后</text><text class="price">¥{{comboSummary.finalText}}</text></view>
-            <view class="combo-row"><text>本单立省</text><text>¥{{comboSummary.savingsText}}</text></view>
-            <view class="btn mt-20" bindtap="addCombo">加入套餐</view>
           </view>
         </view>
       </view>
-    </scroll-view>
+
+      <view class="card content-card section-anchor" id="section-noodle">
+        <view class="section-head">
+          <view class="section-title">面食</view>
+          <view class="muted">也可以单独点</view>
+        </view>
+        <view wx:for="{{noodles}}" wx:key="id" class="menu-item">
+          <image class="menu-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="menu-body">
+            <view class="row space-between align-start">
+              <view class="menu-name">{{item.name}}</view>
+              <view class="price">¥{{item.salePriceText}}</view>
+            </view>
+            <view class="muted mt-8">{{item.desc}}</view>
+            <view class="row space-between mt-12 align-start">
+              <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
+              <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
+                {{item.soldOut ? '售罄' : '+'}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card content-card section-anchor" id="section-combo">
+        <view class="section-title">套餐</view>
+        <view class="muted">任意选 1 份汤 + 1 份面，不需要备注，系统会直接算好价格。</view>
+
+        <view class="combo-section">
+          <view class="combo-label">先选汤</view>
+          <view class="chip-wrap">
+            <view
+              wx:for="{{soups}}"
+              wx:key="id"
+              class="choice-chip {{selectedSoupId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
+              bindtap="chooseComboSoup"
+              data-id="{{item.id}}"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+
+        <view class="combo-section">
+          <view class="combo-label">再选面</view>
+          <view class="chip-wrap">
+            <view
+              wx:for="{{noodles}}"
+              wx:key="id"
+              class="choice-chip {{selectedNoodleId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
+              bindtap="chooseComboNoodle"
+              data-id="{{item.id}}"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+
+        <view class="soft-panel mt-20" wx:if="{{comboSummary}}">
+          <view class="combo-row"><text>汤品</text><text>{{comboSummary.soup.name}}</text></view>
+          <view class="combo-row"><text>面食</text><text>{{comboSummary.noodle.name}}</text></view>
+          <view class="combo-row"><text>原价</text><text>¥{{comboSummary.originalText}}</text></view>
+          <view class="combo-row"><text>折后</text><text class="price">¥{{comboSummary.finalText}}</text></view>
+          <view class="combo-row"><text>本单立省</text><text>¥{{comboSummary.savingsText}}</text></view>
+          <view class="btn mt-20" bindtap="addCombo">加入套餐</view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <view class="card sticky-summary">

@@ -63,51 +63,82 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="section-head">
-      <view class="section-title">热卖汤品</view>
-      <view class="muted">看到喜欢的直接去点单</view>
+  <view class="card signature-card">
+    <view class="section-head signature-head">
+      <view>
+        <view class="section-title">招牌必点</view>
+        <view class="muted">这几款是顾客最容易一试就回头的。</view>
+      </view>
+      <view class="tag">每日现炖</view>
     </view>
-    <scroll-view class="hot-scroll" scroll-x enhanced show-scrollbar="false">
-      <view class="hot-list">
-        <view wx:for="{{hotSoups}}" wx:key="id" class="hot-card">
-          <image class="hot-image" src="{{item.image}}" mode="aspectFill"></image>
-          <view class="hot-badge">{{item.hotLabel}}</view>
-          <view class="hot-body">
-            <view class="hot-name">{{item.name}}</view>
-            <view class="muted mt-8 hot-desc">{{item.desc}}</view>
-            <view class="row space-between mt-16 align-start">
-              <view>
-                <view class="price">¥{{item.salePriceText}}</view>
-                <view class="muted mt-8">原价 ¥{{item.originalText}}</view>
+    <swiper
+      class="signature-swiper"
+      circular
+      autoplay
+      interval="4200"
+      duration="420"
+      current="{{currentSwiper}}"
+      bindchange="handleSwiperChange"
+    >
+      <swiper-item wx:for="{{signatureSoups}}" wx:key="id">
+        <view class="signature-slide">
+          <image class="signature-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="signature-mask"></view>
+          <view class="signature-corner">{{item.badge}}</view>
+          <view class="signature-content">
+            <view class="signature-hot">{{item.hotLabel}}</view>
+            <view class="signature-name">{{item.name}}</view>
+            <view class="signature-desc">{{item.marketingLine}}</view>
+            <view class="row space-between mt-20 align-start">
+              <view class="signature-price-group">
+                <view class="signature-price">¥{{item.salePriceText}}</view>
+                <view class="signature-old-price">原价 ¥{{item.originalText}}</view>
               </view>
-              <view class="stock-note">{{item.stock}} 份可点</view>
+              <view class="signature-stock">{{item.stock}} 份可点</view>
             </view>
           </view>
         </view>
-      </view>
-    </scroll-view>
-    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点单</view>
+      </swiper-item>
+    </swiper>
+    <view class="swiper-dots">
+      <view
+        wx:for="{{signatureSoups}}"
+        wx:key="id"
+        class="swiper-dot {{currentSwiper === index ? 'swiper-dot-active' : ''}}"
+      ></view>
+    </view>
+    <view class="signature-note">每日现炖，售完即止</view>
+    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点招牌汤</view>
   </view>
 
-  <view class="card">
+  <view class="card fresh-visual-card">
     <view class="section-head">
-      <view class="section-title">新鲜现炖</view>
-      <view class="muted">想让你看一眼就想点</view>
+      <view>
+        <view class="section-title">新鲜 · 现点现做</view>
+        <view class="muted">视觉先让人心动，再决定下单。</view>
+      </view>
+      <view class="tag">看得到的新鲜感</view>
     </view>
-    <scroll-view class="fresh-scroll" scroll-x enhanced show-scrollbar="false">
-      <view class="fresh-list">
-        <view wx:for="{{freshCards}}" wx:key="id" class="fresh-card">
-          <image class="fresh-image" src="{{item.image}}" mode="aspectFill"></image>
-          <view class="fresh-body">
-            <view class="fresh-tag">{{item.tag}}</view>
-            <view class="fresh-title">{{item.title}}</view>
-            <view class="muted mt-8 fresh-desc">{{item.desc}}</view>
+    <view class="fresh-visual-grid">
+      <view class="fresh-visual-main" wx:if="{{freshScenes[0]}}">
+        <image class="fresh-visual-image main-image" src="{{freshScenes[0].image}}" mode="aspectFill"></image>
+        <view class="fresh-overlay"></view>
+        <view class="fresh-overlay-text">
+          <view class="fresh-overlay-tag">{{freshScenes[0].overlay}}</view>
+          <view class="fresh-overlay-title">{{freshScenes[0].title}}</view>
+        </view>
+      </view>
+      <view class="fresh-visual-side">
+        <view wx:for="{{freshScenes}}" wx:key="id" wx:if="{{index > 0}}" class="fresh-visual-side-item">
+          <image class="fresh-visual-image side-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="fresh-overlay"></view>
+          <view class="fresh-overlay-text side-text">
+            <view class="fresh-overlay-tag">{{item.overlay}}</view>
+            <view class="fresh-overlay-title">{{item.title}}</view>
           </view>
         </view>
       </view>
-    </scroll-view>
-    <view class="btn mt-20" bindtap="goTo" data-page="menu">去点一份热汤</view>
+    </view>
   </view>
 
   <view class="card">

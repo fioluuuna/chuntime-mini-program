@@ -1,5 +1,7 @@
+import { resolveOpenAIImageKey } from "./resolve-key.mjs"
+
 async function main() {
-  const apiKey = process.env.OPENAI_IMAGE_KEY
+  const apiKey = resolveOpenAIImageKey()
   if (!apiKey) {
     throw new Error("Missing OPENAI_IMAGE_KEY.")
   }

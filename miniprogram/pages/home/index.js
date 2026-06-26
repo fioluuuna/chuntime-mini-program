@@ -2,6 +2,20 @@ const { catalog, discounted, toPriceText } = require("../../utils/pricing")
 const { getProducts, getConfig } = require("../../utils/api")
 const { ensureState, setOwnerSession } = require("../../utils/state")
 
+const SIGNATURE_COPY = {
+  "soup-02": "慢炖数小时，汤头温润耐喝，很多人第一单就会点它。",
+  "soup-03": "鸡汤香气更明显，想喝得满足一点就很适合。",
+  "soup-04": "更醇厚的精致口感，适合当一份认真吃的午餐。",
+  "soup-07": "清甜暖胃，轻负担但很有记忆点。",
+}
+
+const SIGNATURE_BADGES = {
+  "soup-02": "人气爆单",
+  "soup-03": "招牌必点",
+  "soup-04": "热销推荐",
+  "soup-07": "清甜首选",
+}
+
 function getHotLabel(item) {
   if (item.stock <= 5) {
     return `仅剩 ${item.stock} 份`
@@ -16,10 +30,11 @@ Page({
     routeImage: catalog.images.route,
     ownerQrImage: catalog.images.paymentQr,
     availableCount: 0,
-    hotSoups: [],
-    freshCards: [],
+    signatureSoups: [],
+    freshScenes: [],
     showOwnerModal: false,
     ownerCode: "",
+    currentSwiper: 0,
   },
 
   async onShow() {
@@ -30,11 +45,11 @@ Page({
     try {
       ;[config, products] = await Promise.all([getConfig(), getProducts()])
     } catch (error) {
-      // Fall back to local catalog when remote service is unavailable.
+      // Fall back to local catalog data when remote service is unavailable.
     }
 
     const sourceSoupMap = new Map(catalog.soups.map((item) => [item.id, item]))
-    const hotSoups = products
+    const signatureSoups = products
       .filter((item) => item.category === "soup")
       .map((item) => {
         const source = sourceSoupMap.get(item.id) || {}
@@ -46,6 +61,8 @@ Page({
           salePriceText: toPriceText(discounted(item.price, config.discountRate || catalog.shop.discountRate)),
           originalText: toPriceText(item.price),
           hotLabel: getHotLabel({ ...item, soldCount }),
+          badge: SIGNATURE_BADGES[item.id] || "人气推荐",
+          marketingLine: SIGNATURE_COPY[item.id] || item.desc,
         }
       })
       .sort((a, b) => {
@@ -56,28 +73,25 @@ Page({
 
     this.setData({
       shop: { ...this.data.shop, ...config },
-      hotSoups,
-      freshCards: [
+      signatureSoups,
+      freshScenes: [
         {
-          id: "fresh-1",
+          id: "scene-01",
           image: "/assets/images/dish-01.jpg",
-          tag: "每日新鲜采购",
-          title: "汤底每天重新备料",
-          desc: "不是冻品拼一拼，食材新鲜这件事，顾客喝第一口就能感觉到。",
+          overlay: "每日新鲜采购",
+          title: "食材新鲜，是第一眼就该看得见的安心感。",
         },
         {
-          id: "fresh-2",
+          id: "scene-02",
           image: "/assets/images/dish-03.jpg",
-          tag: "现点现炖",
-          title: "下单后再认真出餐",
-          desc: "尽量让每一份送到手上的炖汤，都保留热气和香气。",
+          overlay: "拒绝预制，现点现炖",
+          title: "不是流水线热一热，送到手上的时候应该还带着香气。",
         },
         {
-          id: "fresh-3",
+          id: "scene-03",
           image: "/assets/images/dish-07.jpg",
-          tag: "拒绝预制感",
-          title: "喝起来像家里刚炖好",
-          desc: "不想做那种标准化到没温度的餐，想让人记住的是舒服和安心。",
+          overlay: "热汤现出",
+          title: "想做的是让人喝完会记住的那种舒服和满足。",
         },
       ],
       availableCount: products.filter((item) => Number(item.stock || 0) > 0).length,
@@ -131,6 +145,10 @@ Page({
       ownerCode: "",
     })
     wx.navigateTo({ url: "/pages/admin/index" })
+  },
+
+  handleSwiperChange(e) {
+    this.setData({ currentSwiper: e.detail.current || 0 })
   },
 
   previewRoute() {

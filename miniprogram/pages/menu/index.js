@@ -22,7 +22,6 @@ Page({
       { key: "combo", label: "套餐" },
     ],
     activeCategory: "soup",
-    menuScrollTop: 0,
     soups: [],
     noodles: [],
     selectedSoupId: "",
@@ -30,11 +29,18 @@ Page({
     comboSummary: null,
     cartCount: 0,
     cartTotalText: "0.00",
+    pageScrollTop: 0,
   },
 
   onShow() {
     ensureState()
     this.refresh()
+  },
+
+  onPageScroll(e) {
+    const scrollTop = e.scrollTop || 0
+    this.pageScrollTop = scrollTop
+    this.syncActiveCategory(scrollTop)
   },
 
   async refresh() {
@@ -80,60 +86,58 @@ Page({
       this.measureSections()
       setTimeout(() => {
         this.measureSections()
-      }, 280)
+      }, 260)
     })
   },
 
   measureSections() {
     const query = wx.createSelectorQuery().in(this)
-    query.select(".menu-content-scroll").boundingClientRect()
+    query.selectViewport().scrollOffset()
     query.select("#section-soup").boundingClientRect()
     query.select("#section-noodle").boundingClientRect()
     query.select("#section-combo").boundingClientRect()
     query.exec((res) => {
-      const [scrollRect, soupRect, noodleRect, comboRect] = res || []
-      if (!scrollRect || !soupRect || !noodleRect || !comboRect) return
+      const [viewport, soupRect, noodleRect, comboRect] = res || []
+      const baseScrollTop = typeof viewport?.scrollTop === "number" ? viewport.scrollTop : this.pageScrollTop || 0
+      if (!soupRect || !noodleRect || !comboRect) return
 
-      const currentScrollTop = this.data.menuScrollTop || 0
       this.sectionTopMap = {
-        soup: Math.max(0, soupRect.top - scrollRect.top + currentScrollTop),
-        noodle: Math.max(0, noodleRect.top - scrollRect.top + currentScrollTop),
-        combo: Math.max(0, comboRect.top - scrollRect.top + currentScrollTop),
+        soup: Math.max(0, soupRect.top + baseScrollTop),
+        noodle: Math.max(0, noodleRect.top + baseScrollTop),
+        combo: Math.max(0, comboRect.top + baseScrollTop),
       }
+      this.syncActiveCategory(baseScrollTop)
     })
+  },
+
+  syncActiveCategory(scrollTop) {
+    const topMap = this.sectionTopMap
+    if (!topMap) return
+
+    const watchLine = scrollTop + 180
+    let activeCategory = "soup"
+    if (watchLine >= topMap.combo) {
+      activeCategory = "combo"
+    } else if (watchLine >= topMap.noodle) {
+      activeCategory = "noodle"
+    } else if (watchLine >= topMap.soup) {
+      activeCategory = "soup"
+    }
+
+    if (activeCategory !== this.data.activeCategory) {
+      this.setData({ activeCategory })
+    }
   },
 
   selectCategory(e) {
     const key = e.currentTarget.dataset.key
-    const nextTop = this.sectionTopMap && typeof this.sectionTopMap[key] === "number"
-      ? Math.max(0, this.sectionTopMap[key] - 8)
-      : 0
-
-    this.setData({
-      activeCategory: key,
-      menuScrollTop: nextTop,
-    })
-  },
-
-  handleMenuScroll(e) {
-    const scrollTop = e.detail.scrollTop || 0
     const topMap = this.sectionTopMap || {}
-    const entries = Object.keys(topMap).map((key) => ({ key, top: topMap[key] }))
-    if (!entries.length) {
-      this.setData({ menuScrollTop: scrollTop })
-      return
-    }
+    const targetTop = typeof topMap[key] === "number" ? Math.max(0, topMap[key] - 108) : 0
 
-    let activeCategory = entries[0].key
-    for (let i = 0; i < entries.length; i += 1) {
-      if (scrollTop + 24 >= entries[i].top) {
-        activeCategory = entries[i].key
-      }
-    }
-
-    this.setData({
-      menuScrollTop: scrollTop,
-      activeCategory,
+    this.setData({ activeCategory: key })
+    wx.pageScrollTo({
+      scrollTop: targetTop,
+      duration: 260,
     })
   },
 
@@ -175,7 +179,6 @@ Page({
   refreshComboSummary() {
     const soup = this.data.soups.find((item) => item.id === this.data.selectedSoupId)
     const noodle = this.data.noodles.find((item) => item.id === this.data.selectedNoodleId)
-
     if (!soup || !noodle) {
       this.setData({ comboSummary: null })
       return

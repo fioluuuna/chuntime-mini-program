@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { resolveRoute } from "./intent-router.mjs"
+import { resolveOpenAIImageKey } from "./resolve-key.mjs"
 
 const DEFAULT_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2"
 const DEFAULT_IMAGE_SIZE = process.env.OPENAI_IMAGE_SIZE || "1536x1024"
@@ -74,7 +75,7 @@ async function generateImage({ prompt, out, size, quality, dryRun }) {
     return
   }
 
-  const apiKey = process.env.OPENAI_IMAGE_KEY
+  const apiKey = resolveOpenAIImageKey()
   if (!apiKey) {
     throw new Error("Missing OPENAI_IMAGE_KEY. Please set a dedicated image key before generating images.")
   }

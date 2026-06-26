@@ -1,13 +1,22 @@
+.menu-page {
+  padding-bottom: 170rpx;
+}
+
+.menu-top-card {
+  margin-bottom: 18rpx;
+}
+
 .menu-shell {
   display: flex;
-  gap: 18rpx;
   align-items: flex-start;
+  gap: 18rpx;
 }
 
 .menu-sidebar {
   width: 144rpx;
   position: sticky;
   top: 24rpx;
+  align-self: flex-start;
 }
 
 .category-item {
@@ -27,14 +36,9 @@
   box-shadow: 0 14rpx 28rpx rgba(184, 97, 48, 0.22);
 }
 
-.menu-content-scroll {
+.menu-content {
   flex: 1;
   min-width: 0;
-  height: calc(100vh - 300rpx);
-}
-
-.menu-content {
-  padding-bottom: 8rpx;
 }
 
 .content-card {
