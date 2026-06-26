@@ -3,15 +3,15 @@
     <view class="section-head">
       <view>
         <view class="title">店长后台</view>
-        <view class="subtitle">顾客端看不到这里。这里专门处理订单、库存、耗材和日报。</view>
+        <view class="subtitle">顾客端看不到这里。这里专门处理订单、库存、物料和日报。</view>
       </view>
       <view class="btn btn-ghost" bindtap="logout">退出</view>
     </view>
 
-    <view wx:if="{{supplyAlerts.length}}" class="alert-box">
-      <view class="alert-title">耗材预警</view>
-      <view wx:for="{{supplyAlerts}}" wx:key="id" class="muted mt-8">
-        {{item.name}} 仅剩 {{item.stock}}{{item.unit}}，低于预警线 {{item.warningLine}}{{item.unit}}
+    <view wx:if="{{materialAlerts.length}}" class="alert-box">
+      <view class="alert-title">物料预警</view>
+      <view wx:for="{{materialAlerts}}" wx:key="id" class="muted mt-8">
+        【{{item.groupLabel}}】{{item.name}} 仅剩 {{item.stock}}{{item.unit}}，低于预警线 {{item.warningLine}}{{item.unit}}
       </view>
     </view>
   </view>
@@ -27,7 +27,7 @@
     <view class="module-chips">
       <view class="module-chip {{activeModule === 'orders' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="orders">订单管理</view>
       <view class="module-chip {{activeModule === 'products' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="products">菜品库存</view>
-      <view class="module-chip {{activeModule === 'supplies' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="supplies">耗材管理</view>
+      <view class="module-chip {{activeModule === 'materials' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="materials">物料管理</view>
       <view class="module-chip {{activeModule === 'report' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="report">日报统计</view>
     </view>
   </view>
@@ -42,6 +42,7 @@
         <view class="filter-chip {{orderFilter === 'completed' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="completed">已完成</view>
       </view>
     </view>
+
     <view wx:for="{{visibleOrders}}" wx:key="id" class="order-admin-row">
       <view class="row space-between align-start">
         <view class="order-detail">
@@ -49,7 +50,7 @@
           <view class="muted mt-8">{{item.fulfillmentText}} · {{item.phone}}</view>
           <view class="muted mt-8 order-text">地址：{{item.address}}</view>
           <view wx:if="{{item.remark}}" class="muted mt-8 order-text">备注：{{item.remark}}</view>
-          <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
+          <view class="muted mt-8">{{item.createdAt}} · 金额 {{item.totals.total}}</view>
         </view>
         <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
       </view>
@@ -77,33 +78,43 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{activeModule === 'supplies'}}">
+  <view class="card" wx:if="{{activeModule === 'materials'}}">
     <view class="section-head">
-      <view class="section-title">耗材管理</view>
-      <view class="muted">可设置库存和预警线</view>
-    </view>
-    <view wx:for="{{supplies}}" wx:key="id" class="supply-row">
-      <view class="row space-between align-start">
-        <view>
-          <view class="stock-name">{{item.name}}</view>
-          <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
-          <view class="muted mt-8">{{item.statusText}}</view>
-        </view>
-        <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
+      <view>
+        <view class="section-title">物料管理</view>
+        <view class="muted">统一管理包材耗材和厨房食材/辅料，随时调整库存与预警线。</view>
       </view>
-      <view class="supply-controls mt-16">
-        <view class="control-group">
-          <view class="muted">改库存</view>
-          <view class="stock-controls">
-            <view class="stock-btn" bindtap="changeSupplyStock" data-id="{{item.id}}" data-delta="-1">-</view>
-            <view class="stock-btn" bindtap="changeSupplyStock" data-id="{{item.id}}" data-delta="1">+</view>
+      <view class="tag">打开后台就知道缺什么</view>
+    </view>
+
+    <view wx:for="{{materialGroups}}" wx:key="key" class="material-group">
+      <view class="material-group-head">
+        <view class="material-group-title">{{item.title}}</view>
+        <view class="muted">{{item.items.length}} 项</view>
+      </view>
+
+      <view wx:for="{{item.items}}" wx:key="id" class="material-row">
+        <view class="row space-between align-start">
+          <view>
+            <view class="stock-name">{{item.name}}</view>
+            <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
           </view>
+          <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
         </view>
-        <view class="control-group">
-          <view class="muted">改预警线</view>
-          <view class="stock-controls">
-            <view class="stock-btn" bindtap="changeSupplyWarning" data-id="{{item.id}}" data-delta="-1">-</view>
-            <view class="stock-btn" bindtap="changeSupplyWarning" data-id="{{item.id}}" data-delta="1">+</view>
+        <view class="supply-controls mt-16">
+          <view class="control-group">
+            <view class="muted">改库存</view>
+            <view class="stock-controls">
+              <view class="stock-btn" bindtap="changeMaterialStock" data-id="{{item.id}}" data-delta="-1">-</view>
+              <view class="stock-btn" bindtap="changeMaterialStock" data-id="{{item.id}}" data-delta="1">+</view>
+            </view>
+          </view>
+          <view class="control-group">
+            <view class="muted">改预警线</view>
+            <view class="stock-controls">
+              <view class="stock-btn" bindtap="changeMaterialWarning" data-id="{{item.id}}" data-delta="-1">-</view>
+              <view class="stock-btn" bindtap="changeMaterialWarning" data-id="{{item.id}}" data-delta="1">+</view>
+            </view>
           </view>
         </view>
       </view>
@@ -111,9 +122,94 @@
   </view>
 
   <view class="card" wx:if="{{activeModule === 'report'}}">
-    <view class="section-title">日报统计</view>
-    <view class="muted">{{reportText}}</view>
-    <view class="btn mt-20" bindtap="copyReport">一键复制今日摘要</view>
+    <view class="section-head">
+      <view>
+        <view class="section-title">日报统计</view>
+        <view class="muted">{{reportText}}</view>
+      </view>
+      <view class="btn btn-ghost" bindtap="copyReport">复制摘要</view>
+    </view>
+
+    <view class="ledger-panel">
+      <view class="section-head ledger-head">
+        <view>
+          <view class="analytics-title">每日记账</view>
+          <view class="muted">收入支出都能在手机上快速记录。</view>
+        </view>
+        <picker mode="date" value="{{ledgerDate}}" bindchange="changeLedgerDate">
+          <view class="picker-chip">{{ledgerDate}}</view>
+        </picker>
+      </view>
+
+      <view class="ledger-summary-grid">
+        <view class="ledger-summary-card">
+          <view class="ledger-summary-label">当日结余</view>
+          <view class="ledger-summary-value">{{ledger.summary.balanceText}}</view>
+        </view>
+        <view class="ledger-summary-card">
+          <view class="ledger-summary-label">总收入</view>
+          <view class="ledger-summary-value income-text">{{ledger.summary.incomeText}}</view>
+        </view>
+        <view class="ledger-summary-card">
+          <view class="ledger-summary-label">总支出</view>
+          <view class="ledger-summary-value expense-text">{{ledger.summary.expenseText}}</view>
+        </view>
+      </view>
+
+      <view class="ledger-form-grid">
+        <view class="ledger-form-card">
+          <view class="ledger-form-title">添加收入</view>
+          <input class="input mt-16" type="digit" value="{{incomeAmount}}" bindinput="bindIncomeAmount" placeholder="收入金额" placeholder-class="field-placeholder" />
+          <picker mode="selector" range="{{incomeSources}}" value="{{incomeSourceIndex}}" bindchange="changeIncomeSource">
+            <view class="picker-field mt-16">来源：{{incomeSources[incomeSourceIndex]}}</view>
+          </picker>
+          <input class="input mt-16" value="{{incomeRemark}}" bindinput="bindIncomeRemark" placeholder="备注，可不填" placeholder-class="field-placeholder" />
+          <view class="btn mt-20" bindtap="submitIncome">记录收入</view>
+        </view>
+
+        <view class="ledger-form-card">
+          <view class="ledger-form-title">添加支出</view>
+          <input class="input mt-16" type="digit" value="{{expenseAmount}}" bindinput="bindExpenseAmount" placeholder="支出金额" placeholder-class="field-placeholder" />
+          <picker mode="selector" range="{{expenseCategories}}" value="{{expenseCategoryIndex}}" bindchange="changeExpenseCategory">
+            <view class="picker-field mt-16">分类：{{expenseCategories[expenseCategoryIndex]}}</view>
+          </picker>
+          <input class="input mt-16" value="{{expenseRemark}}" bindinput="bindExpenseRemark" placeholder="备注，可不填" placeholder-class="field-placeholder" />
+          <view class="btn btn-warm mt-20" bindtap="submitExpense">记录支出</view>
+        </view>
+      </view>
+
+      <view class="ledger-lists">
+        <view class="ledger-list-card">
+          <view class="ledger-form-title">收入记录</view>
+          <view wx:if="{{ledger.incomeEntries.length === 0}}" class="muted mt-16">当天还没有收入记录</view>
+          <view wx:for="{{ledger.incomeEntries}}" wx:key="id" class="ledger-entry">
+            <view class="row space-between align-start">
+              <view class="ledger-entry-main">
+                <view class="stock-name">{{item.source}}</view>
+                <view wx:if="{{item.remark}}" class="muted mt-8 order-text">{{item.remark}}</view>
+                <view class="muted mt-8">{{item.createdAt}}</view>
+              </view>
+              <view class="ledger-amount income-text">+{{item.amount}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="ledger-list-card">
+          <view class="ledger-form-title">支出记录</view>
+          <view wx:if="{{ledger.expenseEntries.length === 0}}" class="muted mt-16">当天还没有支出记录</view>
+          <view wx:for="{{ledger.expenseEntries}}" wx:key="id" class="ledger-entry">
+            <view class="row space-between align-start">
+              <view class="ledger-entry-main">
+                <view class="stock-name">{{item.category}}</view>
+                <view wx:if="{{item.remark}}" class="muted mt-8 order-text">{{item.remark}}</view>
+                <view class="muted mt-8">{{item.createdAt}}</view>
+              </view>
+              <view class="ledger-amount expense-text">-{{item.amount}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
 
     <view class="analytics-block">
       <view class="analytics-title">哪个汤最受欢迎</view>

@@ -15,9 +15,9 @@
 
 .alert-box {
   margin-top: 20rpx;
-  padding: 20rpx;
+  padding: 22rpx;
   border-radius: 20rpx;
-  background: #fff0db;
+  background: linear-gradient(180deg, #fff2df, #ffead4);
 }
 
 .alert-title {
@@ -53,16 +53,18 @@
 
 .stock-row,
 .order-admin-row,
-.supply-row,
-.analytics-block {
+.material-row,
+.analytics-block,
+.ledger-entry {
   padding: 18rpx 0;
   border-bottom: 1rpx solid #f2ebe3;
 }
 
 .stock-row:last-child,
 .order-admin-row:last-child,
-.supply-row:last-child,
-.analytics-block:last-child {
+.material-row:last-child,
+.analytics-block:last-child,
+.ledger-entry:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
@@ -119,6 +121,33 @@
   min-width: 0;
 }
 
+.order-text {
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+.material-group {
+  margin-top: 24rpx;
+}
+
+.material-group:first-of-type {
+  margin-top: 12rpx;
+}
+
+.material-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.material-group-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #37261b;
+}
+
 .supply-controls {
   display: flex;
   gap: 28rpx;
@@ -144,8 +173,101 @@
   color: #6f5d4f;
 }
 
-.order-text {
-  white-space: normal;
-  word-break: break-all;
-  line-height: 1.6;
+.ledger-panel {
+  margin-top: 22rpx;
+  padding: 24rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(180deg, #fffaf5, #f8f1e8);
+}
+
+.ledger-head {
+  margin-bottom: 18rpx;
+}
+
+.picker-chip {
+  padding: 14rpx 20rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #5b4738;
+  font-size: 22rpx;
+  box-shadow: 0 8rpx 20rpx rgba(111, 78, 46, 0.08);
+}
+
+.ledger-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.ledger-summary-card {
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: #fffdf9;
+  box-shadow: 0 10rpx 24rpx rgba(111, 78, 46, 0.06);
+}
+
+.ledger-summary-label {
+  color: #8a7562;
+  font-size: 22rpx;
+}
+
+.ledger-summary-value {
+  margin-top: 14rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #2f241b;
+}
+
+.ledger-form-grid,
+.ledger-lists {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18rpx;
+  margin-top: 20rpx;
+}
+
+.ledger-form-card,
+.ledger-list-card {
+  padding: 22rpx;
+  border-radius: 24rpx;
+  background: #fffdf9;
+  box-shadow: inset 0 0 0 1rpx rgba(207, 186, 162, 0.28);
+}
+
+.ledger-form-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #38281e;
+}
+
+.picker-field {
+  padding: 24rpx 22rpx;
+  border-radius: 20rpx;
+  background: #f7f0e7;
+  color: #5f4c3c;
+  font-size: 24rpx;
+}
+
+.ledger-entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ledger-amount {
+  font-size: 28rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 18rpx;
+}
+
+.income-text {
+  color: #2f7a45;
+}
+
+.expense-text {
+  color: #c84733;
+}
+
+.btn-warm {
+  background: linear-gradient(180deg, #d18a4a, #b8662d);
 }

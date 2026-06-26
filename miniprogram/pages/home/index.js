@@ -151,6 +151,20 @@ Page({
     this.setData({ currentSwiper: e.detail.current || 0 })
   },
 
+  prevSignature() {
+    const total = this.data.signatureSoups.length
+    if (!total) return
+    const nextIndex = (this.data.currentSwiper - 1 + total) % total
+    this.setData({ currentSwiper: nextIndex })
+  },
+
+  nextSignature() {
+    const total = this.data.signatureSoups.length
+    if (!total) return
+    const nextIndex = (this.data.currentSwiper + 1) % total
+    this.setData({ currentSwiper: nextIndex })
+  },
+
   previewRoute() {
     wx.previewImage({
       current: this.data.routeImage,

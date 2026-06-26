@@ -1,7 +1,8 @@
 const defaultStore = {
+  schemaVersion: 3,
   config: {
     shopName: "炖时光",
-    address: "广州市番禺区东艺路意库创意十街 66 栋 108 号",
+    address: "广州市番禺区东艺路意库创意十街66栋108号",
     phone: "19120670520",
     hours: "11:00-19:00",
     deliveryAreas: ["金山谷", "保利", "意库"],
@@ -17,7 +18,7 @@ const defaultStore = {
     {
       id: "soup-01",
       category: "soup",
-      name: "橄榄百合龙骨汤",
+      name: "椰子百合龙骨汤",
       price: 18,
       image: "/assets/images/dish-01.jpg",
       desc: "清润顺口，适合日常滋养。",
@@ -123,11 +124,36 @@ const defaultStore = {
       stock: 20,
     },
   ],
-  supplies: [
-    { id: "supply-box", name: "炖汤打包盒", stock: 7, warningLine: 10, unit: "个" },
-    { id: "supply-bag", name: "打包袋", stock: 26, warningLine: 10, unit: "个" },
-    { id: "supply-cutlery", name: "餐具", stock: 40, warningLine: 15, unit: "份" },
+  materials: [
+    { id: "material-box", name: "炖汤打包盒", groupKey: "packaging", groupLabel: "包材耗材", stock: 7, warningLine: 10, unit: "个" },
+    { id: "material-bag", name: "打包袋", groupKey: "packaging", groupLabel: "包材耗材", stock: 26, warningLine: 10, unit: "个" },
+    { id: "material-cutlery", name: "餐具", groupKey: "packaging", groupLabel: "包材耗材", stock: 40, warningLine: 15, unit: "份" },
+    { id: "material-noodle-stock", name: "面条", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 18, warningLine: 6, unit: "份" },
+    { id: "material-flour", name: "面粉", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 4, warningLine: 2, unit: "袋" },
+    { id: "material-salt", name: "盐", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 5, warningLine: 2, unit: "袋" },
+    { id: "material-sugar", name: "糖", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 4, warningLine: 2, unit: "袋" },
+    { id: "material-oil", name: "油", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 3, warningLine: 1, unit: "桶" },
+    { id: "material-seasoning", name: "调味品", groupKey: "kitchen", groupLabel: "厨房食材/辅料", stock: 6, warningLine: 2, unit: "瓶" },
   ],
+  ledger: {
+    "2026-06-26": {
+      income: [
+        { id: "income-20260626-1", amount: 168, source: "微信收款", remark: "午市外卖订单", createdAt: "2026-06-26 12:08:00" },
+        { id: "income-20260626-2", amount: 56, source: "堂食收款码", remark: "到店自提", createdAt: "2026-06-26 18:16:00" },
+      ],
+      expense: [
+        { id: "expense-20260626-1", amount: 86, category: "食材采购", remark: "早市补货", createdAt: "2026-06-26 08:05:00" },
+        { id: "expense-20260626-2", amount: 18, category: "包装耗材", remark: "餐具补货", createdAt: "2026-06-26 15:12:00" },
+      ],
+    },
+    "2026-06-25": {
+      income: [{ id: "income-20260625-1", amount: 198, source: "微信收款", remark: "午高峰订单", createdAt: "2026-06-25 13:02:00" }],
+      expense: [
+        { id: "expense-20260625-1", amount: 112, category: "食材采购", remark: "汤料与蔬菜", createdAt: "2026-06-25 07:36:00" },
+        { id: "expense-20260625-2", amount: 24, category: "其他", remark: "临时配送油费", createdAt: "2026-06-25 17:40:00" },
+      ],
+    },
+  },
   member: {
     points: 1260,
     balance: 300,
@@ -163,9 +189,7 @@ const defaultStore = {
       fulfillmentType: "pickup",
       address: "到店自取",
       remark: "12 点后到店",
-      items: [
-        { productId: "soup-07", productName: "红萝卜汤", quantity: 2, price: 13.2, originalPrice: 15 },
-      ],
+      items: [{ productId: "soup-07", productName: "红萝卜汤", quantity: 2, price: 13.2, originalPrice: 15 }],
       totals: { subtotal: 30, discountedSubtotal: 26.4, shipping: 0, savings: 3.6, total: 26.4 },
       status: "completed",
       createdAt: "2026/06/24 18:06:00",

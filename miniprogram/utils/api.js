@@ -12,7 +12,7 @@ function request(path, options = {}) {
       data: options.data || undefined,
       header: {
         "Content-Type": "application/json",
-        ...(options.header || {})
+        ...(options.header || {}),
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -26,7 +26,7 @@ function request(path, options = {}) {
       },
       fail(err) {
         reject(err)
-      }
+      },
     })
   })
 }
@@ -52,7 +52,7 @@ function ownerLogin(code) {
     () =>
       request("/owner-login", {
         method: "POST",
-        data: { code }
+        data: { code },
       }),
     () => localDb.ownerLogin(code)
   )
@@ -67,7 +67,7 @@ function updateProductStock(productId, stock) {
     () =>
       request(`/products/${productId}`, {
         method: "PATCH",
-        data: { stock }
+        data: { stock },
       }),
     () => localDb.updateProductStock(productId, stock)
   )
@@ -86,7 +86,7 @@ function createOrder(payload) {
     () =>
       request("/orders", {
         method: "POST",
-        data: payload
+        data: payload,
       }),
     () => localDb.createOrder(payload)
   )
@@ -96,7 +96,7 @@ function markOrderPaid(orderId) {
   return withFallback(
     () =>
       request(`/orders/${orderId}/mark-paid`, {
-        method: "POST"
+        method: "POST",
       }),
     () => localDb.markOrderPaid(orderId)
   )
@@ -107,7 +107,7 @@ function updateOrderStatus(orderId, status) {
     () =>
       request(`/orders/${orderId}`, {
         method: "PATCH",
-        data: { status }
+        data: { status },
       }),
     () => localDb.updateOrderStatus(orderId, status)
   )
@@ -117,18 +117,45 @@ function getMember() {
   return withFallback(() => request("/member"), () => localDb.getMember())
 }
 
-function getSupplies() {
-  return withFallback(() => request("/supplies"), () => localDb.getSupplies())
+function getMaterials() {
+  return withFallback(() => request("/materials"), () => localDb.getMaterials())
 }
 
-function updateSupply(supplyId, payload) {
+function updateMaterial(materialId, payload) {
   return withFallback(
     () =>
-      request(`/supplies/${supplyId}`, {
+      request(`/materials/${materialId}`, {
         method: "PATCH",
-        data: payload
+        data: payload,
       }),
-    () => localDb.updateSupply(supplyId, payload)
+    () => localDb.updateMaterial(materialId, payload)
+  )
+}
+
+function getLedger(date) {
+  const query = date ? `?date=${encodeURIComponent(date)}` : ""
+  return withFallback(() => request(`/ledger${query}`), () => localDb.getLedger(date))
+}
+
+function addLedgerIncome(payload) {
+  return withFallback(
+    () =>
+      request("/ledger/income", {
+        method: "POST",
+        data: payload,
+      }),
+    () => localDb.addLedgerIncome(payload)
+  )
+}
+
+function addLedgerExpense(payload) {
+  return withFallback(
+    () =>
+      request("/ledger/expense", {
+        method: "POST",
+        data: payload,
+      }),
+    () => localDb.addLedgerExpense(payload)
   )
 }
 
@@ -150,8 +177,10 @@ module.exports = {
   ownerLogin,
   getProducts,
   updateProductStock,
-  getSupplies,
-  updateSupply,
+  getMaterials,
+  updateMaterial,
+  getSupplies: getMaterials,
+  updateSupply: updateMaterial,
   getOrders,
   getOrderById,
   createOrder,
@@ -159,8 +188,11 @@ module.exports = {
   updateOrderStatus,
   getMember,
   getDashboard,
+  getLedger,
+  addLedgerIncome,
+  addLedgerExpense,
   resetDemo,
   getServiceMode() {
     return serviceMode
-  }
+  },
 }

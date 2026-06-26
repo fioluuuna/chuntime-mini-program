@@ -1,17 +1,201 @@
 const catalog = require("../data/catalog")
 
 const KEY = "ct_local_store"
+const SCHEMA_VERSION = 3
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
 function round2(value) {
-  return Math.round(value * 100) / 100
+  return Math.round(Number(value || 0) * 100) / 100
 }
 
 function formatMoney(value) {
-  return `¥${round2(value).toFixed(2)}`
+  return `￥${round2(value).toFixed(2)}`
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0")
+}
+
+function formatDateKey(input) {
+  if (!input) {
+    return ""
+  }
+  if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return input
+  }
+  const raw = typeof input === "string" ? input.replace(/\//g, "-") : ""
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)) {
+    const [year, month, day] = raw.split("-")
+    return `${year}-${pad2(month)}-${pad2(day)}`
+  }
+  const date = input instanceof Date ? input : new Date(input)
+  if (Number.isNaN(date.getTime())) {
+    return ""
+  }
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function getTodayDateKey() {
+  return formatDateKey(new Date())
+}
+
+function formatTimestamp(date = new Date()) {
+  return `${formatDateKey(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+}
+
+function buildDefaultMaterials() {
+  return [
+    {
+      id: "material-box",
+      name: "炖汤打包盒",
+      groupKey: "packaging",
+      groupLabel: "包材耗材",
+      stock: 7,
+      warningLine: 10,
+      unit: "个",
+    },
+    {
+      id: "material-bag",
+      name: "打包袋",
+      groupKey: "packaging",
+      groupLabel: "包材耗材",
+      stock: 26,
+      warningLine: 10,
+      unit: "个",
+    },
+    {
+      id: "material-cutlery",
+      name: "餐具",
+      groupKey: "packaging",
+      groupLabel: "包材耗材",
+      stock: 40,
+      warningLine: 15,
+      unit: "份",
+    },
+    {
+      id: "material-noodle-stock",
+      name: "面条",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 18,
+      warningLine: 6,
+      unit: "份",
+    },
+    {
+      id: "material-flour",
+      name: "面粉",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 4,
+      warningLine: 2,
+      unit: "袋",
+    },
+    {
+      id: "material-salt",
+      name: "盐",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 5,
+      warningLine: 2,
+      unit: "袋",
+    },
+    {
+      id: "material-sugar",
+      name: "糖",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 4,
+      warningLine: 2,
+      unit: "袋",
+    },
+    {
+      id: "material-oil",
+      name: "油",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 3,
+      warningLine: 1,
+      unit: "桶",
+    },
+    {
+      id: "material-seasoning",
+      name: "调味品",
+      groupKey: "kitchen",
+      groupLabel: "厨房食材/辅料",
+      stock: 6,
+      warningLine: 2,
+      unit: "瓶",
+    },
+  ]
+}
+
+function buildDefaultLedger() {
+  return {
+    "2026-06-26": {
+      income: [
+        {
+          id: "income-20260626-1",
+          amount: 168,
+          source: "微信收款",
+          remark: "午市外卖订单",
+          createdAt: "2026-06-26 12:08:00",
+        },
+        {
+          id: "income-20260626-2",
+          amount: 56,
+          source: "堂食收款码",
+          remark: "到店自提",
+          createdAt: "2026-06-26 18:16:00",
+        },
+      ],
+      expense: [
+        {
+          id: "expense-20260626-1",
+          amount: 86,
+          category: "食材采购",
+          remark: "早市补货",
+          createdAt: "2026-06-26 08:05:00",
+        },
+        {
+          id: "expense-20260626-2",
+          amount: 18,
+          category: "包装耗材",
+          remark: "餐具补货",
+          createdAt: "2026-06-26 15:12:00",
+        },
+      ],
+    },
+    "2026-06-25": {
+      income: [
+        {
+          id: "income-20260625-1",
+          amount: 198,
+          source: "微信收款",
+          remark: "午高峰订单",
+          createdAt: "2026-06-25 13:02:00",
+        },
+      ],
+      expense: [
+        {
+          id: "expense-20260625-1",
+          amount: 112,
+          category: "食材采购",
+          remark: "汤料与蔬菜",
+          createdAt: "2026-06-25 07:36:00",
+        },
+        {
+          id: "expense-20260625-2",
+          amount: 24,
+          category: "其他",
+          remark: "临时配送油费",
+          createdAt: "2026-06-25 17:40:00",
+        },
+      ],
+    },
+  }
 }
 
 function buildDefaultStore() {
@@ -38,7 +222,7 @@ function buildDefaultStore() {
   ]
 
   return {
-    schemaVersion: 2,
+    schemaVersion: SCHEMA_VERSION,
     config: {
       shopName: catalog.shop.name,
       address: catalog.shop.address,
@@ -54,11 +238,8 @@ function buildDefaultStore() {
       ownerAccessCode: "dsg2026",
     },
     products,
-    supplies: [
-      { id: "supply-box", name: "炖汤打包盒", stock: 7, warningLine: 10, unit: "个" },
-      { id: "supply-bag", name: "打包袋", stock: 26, warningLine: 10, unit: "个" },
-      { id: "supply-cutlery", name: "餐具", stock: 40, warningLine: 15, unit: "份" },
-    ],
+    materials: buildDefaultMaterials(),
+    ledger: buildDefaultLedger(),
     member: {
       points: 1260,
       balance: 300,
@@ -94,9 +275,7 @@ function buildDefaultStore() {
         fulfillmentType: "pickup",
         address: "到店自取",
         remark: "12 点后到店",
-        items: [
-          { productId: "soup-07", productName: "红萝卜汤", quantity: 2, price: 13.2, originalPrice: 15 },
-        ],
+        items: [{ productId: "soup-07", productName: "红萝卜汤", quantity: 2, price: 13.2, originalPrice: 15 }],
         totals: { subtotal: 30, discountedSubtotal: 26.4, shipping: 0, savings: 3.6, total: 26.4 },
         status: "completed",
         createdAt: "2026/06/24 18:06:00",
@@ -148,7 +327,7 @@ function getPublicConfig(config) {
 
 function ensureStore() {
   const current = wx.getStorageSync(KEY)
-  if (!current || Number(current.schemaVersion || 0) < 2) {
+  if (!current || Number(current.schemaVersion || 0) < SCHEMA_VERSION) {
     wx.setStorageSync(KEY, buildDefaultStore())
   }
 }
@@ -175,19 +354,63 @@ function parseHourLabel(createdAt) {
     return "未知时段"
   }
   const hour = Number(match[1])
-  return `${String(hour).padStart(2, "0")}:00-${String(hour + 1).padStart(2, "0")}:00`
+  return `${pad2(hour)}:00-${pad2(hour + 1)}:00`
 }
 
-function getSupplyStatusKey(item) {
-  return item.stock <= item.warningLine ? "warning" : "normal"
+function getMaterialStatusKey(item) {
+  return Number(item.stock || 0) <= Number(item.warningLine || 0) ? "warning" : "normal"
 }
 
-function getSupplyStatusText(statusKey) {
+function getMaterialStatusText(statusKey) {
   return statusKey === "warning" ? "需补货" : "正常"
 }
 
+function enrichMaterial(item) {
+  const statusKey = getMaterialStatusKey(item)
+  return {
+    ...item,
+    statusKey,
+    statusText: getMaterialStatusText(statusKey),
+  }
+}
+
+function ensureLedgerDay(store, dateKey) {
+  if (!store.ledger) {
+    store.ledger = {}
+  }
+  if (!store.ledger[dateKey]) {
+    store.ledger[dateKey] = {
+      income: [],
+      expense: [],
+    }
+  }
+  return store.ledger[dateKey]
+}
+
+function buildLedgerSnapshot(day, dateKey) {
+  const incomeEntries = clone(day?.income || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const expenseEntries = clone(day?.expense || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const incomeTotal = round2(incomeEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0))
+  const expenseTotal = round2(expenseEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0))
+  const balance = round2(incomeTotal - expenseTotal)
+
+  return {
+    date: dateKey,
+    summary: {
+      incomeTotal,
+      expenseTotal,
+      balance,
+      incomeText: formatMoney(incomeTotal),
+      expenseText: formatMoney(expenseTotal),
+      balanceText: formatMoney(balance),
+    },
+    incomeEntries,
+    expenseEntries,
+  }
+}
+
 function buildDashboard(store) {
-  const totalRevenue = store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0)
+  const totalRevenue = round2(store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0))
   const pendingCount = store.orders.filter((order) => order.status !== "completed").length
   const stockCards = store.products.map((item) => ({
     id: item.id,
@@ -196,15 +419,8 @@ function buildDashboard(store) {
     stock: item.stock,
     remaining: item.stock,
   }))
-  const supplyCards = store.supplies.map((item) => {
-    const statusKey = getSupplyStatusKey(item)
-    return {
-      ...item,
-      statusKey,
-      statusText: getSupplyStatusText(statusKey),
-    }
-  })
-  const supplyAlerts = supplyCards.filter((item) => item.statusKey === "warning")
+  const materialCards = (store.materials || []).map(enrichMaterial)
+  const materialAlerts = materialCards.filter((item) => item.statusKey === "warning")
 
   const soupMap = {}
   const hourMap = {}
@@ -233,16 +449,18 @@ function buildDashboard(store) {
     }
   }
 
+  const todayLedger = buildLedgerSnapshot(ensureLedgerDay(store, getTodayDateKey()), getTodayDateKey())
+
   return {
     summaryCards: [
       { label: "累计订单", value: store.orders.length },
       { label: "累计销售额", value: formatMoney(totalRevenue) },
       { label: "待处理订单", value: pendingCount },
-      { label: "耗材预警", value: supplyAlerts.length },
+      { label: "物料预警", value: materialAlerts.length },
     ],
     stocks: stockCards,
-    supplies: supplyCards,
-    supplyAlerts,
+    materials: materialCards,
+    materialAlerts,
     analytics: {
       topSoups: Object.keys(soupMap)
         .map((name) => ({ name, count: soupMap[name] }))
@@ -263,7 +481,8 @@ function buildDashboard(store) {
           amount: formatMoney(item.amount),
         })),
     },
-    reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。",
+    ledgerOverview: todayLedger.summary,
+    reportText: `今日记账结余 ${todayLedger.summary.balanceText}，收入 ${todayLedger.summary.incomeText}，支出 ${todayLedger.summary.expenseText}。先看待确认订单，再看库存和物料预警。`,
   }
 }
 
@@ -306,20 +525,24 @@ function applyOrder(store, payload) {
   }
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
-  const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
+  const hasSoup = items.some(
+    (item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-"))
+  )
+
+  const materials = store.materials || []
   if (hasSoup) {
-    const box = store.supplies.find((item) => item.id === "supply-box")
+    const box = materials.find((item) => item.id === "material-box")
     if (box) {
       box.stock = Math.max(0, box.stock - totalQuantity)
     }
   }
 
-  const bag = store.supplies.find((item) => item.id === "supply-bag")
+  const bag = materials.find((item) => item.id === "material-bag")
   if (bag && payload.fulfillmentType === "delivery") {
     bag.stock = Math.max(0, bag.stock - 1)
   }
 
-  const cutlery = store.supplies.find((item) => item.id === "supply-cutlery")
+  const cutlery = materials.find((item) => item.id === "material-cutlery")
   if (cutlery) {
     cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
   }
@@ -368,33 +591,24 @@ function updateProductStock(productId, stock) {
   return Promise.resolve(product)
 }
 
-function getSupplies() {
-  const store = readStore()
-  return Promise.resolve(store.supplies.map((item) => {
-    const statusKey = getSupplyStatusKey(item)
-    return {
-      ...item,
-      statusKey,
-      statusText: getSupplyStatusText(statusKey),
-    }
-  }))
+function getMaterials() {
+  return Promise.resolve((readStore().materials || []).map(enrichMaterial))
 }
 
-function updateSupply(supplyId, payload = {}) {
+function updateMaterial(materialId, payload = {}) {
   const store = readStore()
-  const supply = store.supplies.find((item) => item.id === supplyId)
-  if (!supply) {
-    return Promise.reject(new Error("耗材不存在"))
+  const material = (store.materials || []).find((item) => item.id === materialId)
+  if (!material) {
+    return Promise.reject(new Error("物料不存在"))
   }
   if (typeof payload.stock === "number") {
-    supply.stock = Math.max(0, payload.stock)
+    material.stock = Math.max(0, payload.stock)
   }
   if (typeof payload.warningLine === "number") {
-    supply.warningLine = Math.max(0, payload.warningLine)
+    material.warningLine = Math.max(0, payload.warningLine)
   }
   writeStore(store)
-  const statusKey = getSupplyStatusKey(supply)
-  return Promise.resolve({ ...supply, statusKey, statusText: getSupplyStatusText(statusKey) })
+  return Promise.resolve(enrichMaterial(material))
 }
 
 function getOrders() {
@@ -447,7 +661,44 @@ function getMember() {
 }
 
 function getDashboard() {
-  return Promise.resolve(buildDashboard(readStore()))
+  const store = readStore()
+  return Promise.resolve(buildDashboard(store))
+}
+
+function getLedger(date) {
+  const store = readStore()
+  const dateKey = formatDateKey(date) || getTodayDateKey()
+  const day = ensureLedgerDay(store, dateKey)
+  writeStore(store)
+  return Promise.resolve(buildLedgerSnapshot(day, dateKey))
+}
+
+function addLedgerEntry(type, payload = {}) {
+  const normalizedType = type === "expense" ? "expense" : "income"
+  const amount = round2(payload.amount)
+  if (!amount || amount <= 0) {
+    return Promise.reject(new Error("请输入正确金额"))
+  }
+  const dateKey = formatDateKey(payload.date) || getTodayDateKey()
+  const store = readStore()
+  const day = ensureLedgerDay(store, dateKey)
+  const entry = {
+    id: `${normalizedType}-${Date.now()}`,
+    amount,
+    remark: String(payload.remark || "").trim(),
+    createdAt: formatTimestamp(new Date()),
+  }
+
+  if (normalizedType === "income") {
+    entry.source = String(payload.source || "").trim() || "其他"
+    day.income.unshift(entry)
+  } else {
+    entry.category = String(payload.category || "").trim() || "其他"
+    day.expense.unshift(entry)
+  }
+
+  writeStore(store)
+  return Promise.resolve(buildLedgerSnapshot(day, dateKey))
 }
 
 module.exports = {
@@ -460,8 +711,10 @@ module.exports = {
   ownerLogin,
   getProducts,
   updateProductStock,
-  getSupplies,
-  updateSupply,
+  getMaterials,
+  updateMaterial,
+  getSupplies: getMaterials,
+  updateSupply: updateMaterial,
   getOrders,
   getOrderById,
   createOrder,
@@ -469,4 +722,11 @@ module.exports = {
   markOrderPaid,
   getMember,
   getDashboard,
+  getLedger,
+  addLedgerIncome(payload) {
+    return addLedgerEntry("income", payload)
+  },
+  addLedgerExpense(payload) {
+    return addLedgerEntry("expense", payload)
+  },
 }

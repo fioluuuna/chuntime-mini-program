@@ -40,12 +40,47 @@ function readJson(req) {
   })
 }
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value))
+}
+
 function round2(value) {
-  return Math.round(value * 100) / 100
+  return Math.round(Number(value || 0) * 100) / 100
 }
 
 function formatMoney(value) {
-  return `¥${round2(value).toFixed(2)}`
+  return `￥${round2(value).toFixed(2)}`
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0")
+}
+
+function formatDateKey(input) {
+  if (!input) {
+    return ""
+  }
+  if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return input
+  }
+  const raw = typeof input === "string" ? input.replace(/\//g, "-") : ""
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)) {
+    const [year, month, day] = raw.split("-")
+    return `${year}-${pad2(month)}-${pad2(day)}`
+  }
+  const date = input instanceof Date ? input : new Date(input)
+  if (Number.isNaN(date.getTime())) {
+    return ""
+  }
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function getTodayDateKey() {
+  return formatDateKey(new Date())
+}
+
+function formatTimestamp(date = new Date()) {
+  return `${formatDateKey(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
 }
 
 function getPublicConfig(config) {
@@ -65,26 +100,76 @@ function getPublicConfig(config) {
   }
 }
 
-function getSupplyStatusKey(item) {
-  return item.stock <= item.warningLine ? "warning" : "normal"
+function getMaterialStatusKey(item) {
+  return Number(item.stock || 0) <= Number(item.warningLine || 0) ? "warning" : "normal"
 }
 
-function getSupplyStatusText(statusKey) {
+function getMaterialStatusText(statusKey) {
   return statusKey === "warning" ? "需补货" : "正常"
 }
 
+function enrichMaterial(item) {
+  const statusKey = getMaterialStatusKey(item)
+  return {
+    ...item,
+    statusKey,
+    statusText: getMaterialStatusText(statusKey),
+  }
+}
+
+function ensureLedgerDay(store, dateKey) {
+  if (!store.ledger) {
+    store.ledger = {}
+  }
+  if (!store.ledger[dateKey]) {
+    store.ledger[dateKey] = {
+      income: [],
+      expense: [],
+    }
+  }
+  return store.ledger[dateKey]
+}
+
+function buildLedgerSnapshot(day, dateKey) {
+  const incomeEntries = clone(day?.income || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const expenseEntries = clone(day?.expense || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const incomeTotal = round2(incomeEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0))
+  const expenseTotal = round2(expenseEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0))
+  const balance = round2(incomeTotal - expenseTotal)
+
+  return {
+    date: dateKey,
+    summary: {
+      incomeTotal,
+      expenseTotal,
+      balance,
+      incomeText: formatMoney(incomeTotal),
+      expenseText: formatMoney(expenseTotal),
+      balanceText: formatMoney(balance),
+    },
+    incomeEntries,
+    expenseEntries,
+  }
+}
+
+function parseHourLabel(createdAt) {
+  const match = String(createdAt || "").match(/(\d{1,2}):\d{2}/)
+  if (!match) {
+    return "未知时段"
+  }
+  const hour = Number(match[1])
+  return `${pad2(hour)}:00-${pad2(hour + 1)}:00`
+}
+
 function buildDashboard(store) {
-  const totalRevenue = store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0)
+  const totalRevenue = round2(store.orders.reduce((sum, order) => sum + Number(order.totals?.total || 0), 0))
   const pendingCount = store.orders.filter((order) => order.status !== "completed").length
   const soupMap = {}
   const hourMap = {}
   const customerMap = {}
 
   for (const order of store.orders) {
-    const match = String(order.createdAt || "").match(/(\d{1,2}):\d{2}/)
-    const hourLabel = match
-      ? `${String(Number(match[1])).padStart(2, "0")}:00-${String(Number(match[1]) + 1).padStart(2, "0")}:00`
-      : "未知时段"
+    const hourLabel = parseHourLabel(order.createdAt)
     hourMap[hourLabel] = (hourMap[hourLabel] || 0) + 1
 
     const customerKey = order.phone || order.name
@@ -109,21 +194,16 @@ function buildDashboard(store) {
     }
   }
 
-  const supplies = (store.supplies || []).map((item) => {
-    const statusKey = getSupplyStatusKey(item)
-    return {
-      ...item,
-      statusKey,
-      statusText: getSupplyStatusText(statusKey),
-    }
-  })
+  const materials = (store.materials || []).map(enrichMaterial)
+  const materialAlerts = materials.filter((item) => item.statusKey === "warning")
+  const todayLedger = buildLedgerSnapshot(ensureLedgerDay(store, getTodayDateKey()), getTodayDateKey())
 
   return {
     summaryCards: [
       { label: "累计订单", value: store.orders.length },
       { label: "累计销售额", value: formatMoney(totalRevenue) },
       { label: "待处理订单", value: pendingCount },
-      { label: "耗材预警", value: supplies.filter((item) => item.statusKey === "warning").length },
+      { label: "物料预警", value: materialAlerts.length },
     ],
     stocks: store.products.map((item) => ({
       id: item.id,
@@ -132,8 +212,8 @@ function buildDashboard(store) {
       stock: item.stock,
       remaining: item.stock,
     })),
-    supplies,
-    supplyAlerts: supplies.filter((item) => item.statusKey === "warning"),
+    materials,
+    materialAlerts,
     analytics: {
       topSoups: Object.keys(soupMap)
         .map((name) => ({ name, count: soupMap[name] }))
@@ -154,7 +234,8 @@ function buildDashboard(store) {
           amount: formatMoney(item.amount),
         })),
     },
-    reportText: "先看待确认订单，再看炖汤库存和耗材预警。当前后台以手机可操作为主，不做复杂导出。",
+    ledgerOverview: todayLedger.summary,
+    reportText: `今日记账结余 ${todayLedger.summary.balanceText}，收入 ${todayLedger.summary.incomeText}，支出 ${todayLedger.summary.expenseText}。先看待确认订单，再看库存和物料预警。`,
   }
 }
 
@@ -217,26 +298,28 @@ function applyOrder(store, payload) {
   }
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
-  const hasSoup = items.some((item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-")))
-  if (store.supplies?.length) {
-    if (hasSoup) {
-      const box = store.supplies.find((item) => item.id === "supply-box")
-      if (box) {
-        box.stock = Math.max(0, box.stock - totalQuantity)
-      }
-    }
+  const hasSoup = items.some(
+    (item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-"))
+  )
 
-    if (payload.fulfillmentType === "delivery") {
-      const bag = store.supplies.find((item) => item.id === "supply-bag")
-      if (bag) {
-        bag.stock = Math.max(0, bag.stock - 1)
-      }
+  const materials = store.materials || []
+  if (hasSoup) {
+    const box = materials.find((item) => item.id === "material-box")
+    if (box) {
+      box.stock = Math.max(0, box.stock - totalQuantity)
     }
+  }
 
-    const cutlery = store.supplies.find((item) => item.id === "supply-cutlery")
-    if (cutlery) {
-      cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
+  if (payload.fulfillmentType === "delivery") {
+    const bag = materials.find((item) => item.id === "material-bag")
+    if (bag) {
+      bag.stock = Math.max(0, bag.stock - 1)
     }
+  }
+
+  const cutlery = materials.find((item) => item.id === "material-cutlery")
+  if (cutlery) {
+    cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
   }
 
   const order = {
@@ -247,13 +330,40 @@ function applyOrder(store, payload) {
     address: payload.address || "",
     remark: payload.remark || "",
     items,
-    totals: payload.totals,
+    totals: payload.totals || {},
     status: "pending_payment",
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false }),
   }
 
   store.orders.unshift(order)
   return order
+}
+
+function addLedgerEntry(store, type, payload = {}) {
+  const normalizedType = type === "expense" ? "expense" : "income"
+  const amount = round2(payload.amount)
+  if (!amount || amount <= 0) {
+    throw new Error("请输入正确金额")
+  }
+
+  const dateKey = formatDateKey(payload.date) || getTodayDateKey()
+  const day = ensureLedgerDay(store, dateKey)
+  const entry = {
+    id: `${normalizedType}-${Date.now()}`,
+    amount,
+    remark: String(payload.remark || "").trim(),
+    createdAt: formatTimestamp(new Date()),
+  }
+
+  if (normalizedType === "income") {
+    entry.source = String(payload.source || "").trim() || "其他"
+    day.income.unshift(entry)
+  } else {
+    entry.category = String(payload.category || "").trim() || "其他"
+    day.expense.unshift(entry)
+  }
+
+  return buildLedgerSnapshot(day, dateKey)
 }
 
 const server = http.createServer(async (req, res) => {
@@ -307,35 +417,30 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    if (req.method === "GET" && url.pathname === "/api/supplies") {
-      sendJson(res, 200, (store.supplies || []).map((item) => {
-        const statusKey = getSupplyStatusKey(item)
-        return {
-          ...item,
-          statusKey,
-          statusText: getSupplyStatusText(statusKey),
-        }
-      }))
+    if (req.method === "GET" && (url.pathname === "/api/materials" || url.pathname === "/api/supplies")) {
+      sendJson(res, 200, (store.materials || []).map(enrichMaterial))
       return
     }
 
-    if (req.method === "PATCH" && url.pathname.startsWith("/api/supplies/")) {
-      const supplyId = url.pathname.split("/").pop()
+    if (
+      req.method === "PATCH" &&
+      (url.pathname.startsWith("/api/materials/") || url.pathname.startsWith("/api/supplies/"))
+    ) {
+      const materialId = url.pathname.split("/").pop()
       const payload = await readJson(req)
-      const supply = (store.supplies || []).find((item) => item.id === supplyId)
-      if (!supply) {
+      const material = (store.materials || []).find((item) => item.id === materialId)
+      if (!material) {
         notFound(res)
         return
       }
       if (typeof payload.stock === "number") {
-        supply.stock = Math.max(0, payload.stock)
+        material.stock = Math.max(0, payload.stock)
       }
       if (typeof payload.warningLine === "number") {
-        supply.warningLine = Math.max(0, payload.warningLine)
+        material.warningLine = Math.max(0, payload.warningLine)
       }
       writeStore(store)
-      const statusKey = getSupplyStatusKey(supply)
-      sendJson(res, 200, { ...supply, statusKey, statusText: getSupplyStatusText(statusKey) })
+      sendJson(res, 200, enrichMaterial(material))
       return
     }
 
@@ -382,6 +487,30 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === "/api/member") {
       sendJson(res, 200, store.member)
+      return
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/ledger") {
+      const dateKey = formatDateKey(url.searchParams.get("date")) || getTodayDateKey()
+      const day = ensureLedgerDay(store, dateKey)
+      writeStore(store)
+      sendJson(res, 200, buildLedgerSnapshot(day, dateKey))
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ledger/income") {
+      const payload = await readJson(req)
+      const snapshot = addLedgerEntry(store, "income", payload)
+      writeStore(store)
+      sendJson(res, 201, snapshot)
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/ledger/expense") {
+      const payload = await readJson(req)
+      const snapshot = addLedgerEntry(store, "expense", payload)
+      writeStore(store)
+      sendJson(res, 201, snapshot)
       return
     }
 

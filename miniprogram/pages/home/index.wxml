@@ -71,35 +71,53 @@
       </view>
       <view class="tag">每日现炖</view>
     </view>
-    <swiper
-      class="signature-swiper"
-      circular
-      autoplay
-      interval="4200"
-      duration="420"
-      current="{{currentSwiper}}"
-      bindchange="handleSwiperChange"
-    >
-      <swiper-item wx:for="{{signatureSoups}}" wx:key="id">
-        <view class="signature-slide">
-          <image class="signature-image" src="{{item.image}}" mode="aspectFill"></image>
-          <view class="signature-mask"></view>
-          <view class="signature-corner">{{item.badge}}</view>
-          <view class="signature-content">
-            <view class="signature-hot">{{item.hotLabel}}</view>
-            <view class="signature-name">{{item.name}}</view>
-            <view class="signature-desc">{{item.marketingLine}}</view>
-            <view class="row space-between mt-20 align-start">
-              <view class="signature-price-group">
-                <view class="signature-price">¥{{item.salePriceText}}</view>
-                <view class="signature-old-price">原价 ¥{{item.originalText}}</view>
+    <view class="signature-swiper-shell">
+      <swiper
+        class="signature-swiper"
+        circular
+        autoplay
+        interval="4200"
+        duration="420"
+        current="{{currentSwiper}}"
+        bindchange="handleSwiperChange"
+      >
+        <swiper-item wx:for="{{signatureSoups}}" wx:key="id">
+          <view class="signature-slide">
+            <image class="signature-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="signature-mask"></view>
+            <view class="signature-corner">{{item.badge}}</view>
+            <view class="signature-content">
+              <view class="signature-hot">{{item.hotLabel}}</view>
+              <view class="signature-name">{{item.name}}</view>
+              <view class="signature-desc">{{item.marketingLine}}</view>
+              <view class="row space-between mt-20 align-start">
+                <view class="signature-price-group">
+                  <view class="signature-price">¥{{item.salePriceText}}</view>
+                  <view class="signature-old-price">原价 ¥{{item.originalText}}</view>
+                </view>
+                <view class="signature-stock">{{item.stock}} 份可点</view>
               </view>
-              <view class="signature-stock">{{item.stock}} 份可点</view>
             </view>
           </view>
-        </view>
-      </swiper-item>
-    </swiper>
+        </swiper-item>
+      </swiper>
+      <view
+        wx:if="{{signatureSoups.length > 1}}"
+        class="signature-arrow signature-arrow-left"
+        hover-class="signature-arrow-hover"
+        bindtap="prevSignature"
+      >
+        ‹
+      </view>
+      <view
+        wx:if="{{signatureSoups.length > 1}}"
+        class="signature-arrow signature-arrow-right"
+        hover-class="signature-arrow-hover"
+        bindtap="nextSignature"
+      >
+        ›
+      </view>
+    </view>
     <view class="swiper-dots">
       <view
         wx:for="{{signatureSoups}}"

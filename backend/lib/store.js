@@ -22,9 +22,21 @@ function ensureDb() {
   }
 }
 
+function normalizeStore(store) {
+  if (!store || Number(store.schemaVersion || 0) < Number(defaultStore.schemaVersion || 1)) {
+    return clone(defaultStore)
+  }
+  return store
+}
+
 function readStore() {
   ensureDb()
-  return JSON.parse(fs.readFileSync(dbPath, "utf8"))
+  const current = JSON.parse(fs.readFileSync(dbPath, "utf8"))
+  const normalized = normalizeStore(current)
+  if (normalized !== current) {
+    fs.writeFileSync(dbPath, JSON.stringify(normalized, null, 2), "utf8")
+  }
+  return normalized
 }
 
 function writeStore(nextStore) {
@@ -41,6 +53,5 @@ module.exports = {
   dbPath,
   readStore,
   writeStore,
-  resetStore
+  resetStore,
 }
-
