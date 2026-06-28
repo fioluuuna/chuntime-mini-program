@@ -28,15 +28,14 @@
 
 .module-chips,
 .order-filters,
-.status-actions {
+.manage-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .module-chip,
-.filter-chip,
-.status-btn {
+.filter-chip {
   padding: 12rpx 18rpx;
   border-radius: 999rpx;
   background: #f7f2ea;
@@ -45,47 +44,55 @@
 }
 
 .module-chip-active,
-.filter-chip-active,
-.status-btn-primary {
+.filter-chip-active {
   background: #315a33;
   color: #fff;
 }
 
-.stock-row,
+.manage-row,
 .order-admin-row,
-.material-row,
 .analytics-block,
 .ledger-entry {
   padding: 18rpx 0;
   border-bottom: 1rpx solid #f2ebe3;
 }
 
-.stock-row:last-child,
+.manage-row:last-child,
 .order-admin-row:last-child,
-.material-row:last-child,
 .analytics-block:last-child,
 .ledger-entry:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
-.stock-name {
+.manage-row {
+  display: flex;
+  gap: 18rpx;
+}
+
+.manage-row-no-image {
+  display: block;
+}
+
+.thumb-image {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 22rpx;
+  background: #f4ede4;
+  flex: 0 0 auto;
+}
+
+.manage-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.manage-title,
+.stock-name,
+.editor-title {
+  font-size: 28rpx;
   font-weight: 700;
-}
-
-.stock-controls {
-  display: flex;
-  gap: 12rpx;
-}
-
-.stock-btn {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 999rpx;
-  background: #f4ede3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: #2b1d13;
 }
 
 .status-pill {
@@ -116,15 +123,27 @@
   color: #c84733;
 }
 
-.order-detail {
-  flex: 1;
-  min-width: 0;
+.status-pill-inactive {
+  background: #f0ece6;
+  color: #816f5f;
 }
 
-.order-text {
-  white-space: normal;
-  word-break: break-all;
-  line-height: 1.6;
+.action-chip {
+  padding: 12rpx 18rpx;
+  border-radius: 999rpx;
+  background: #f5eee4;
+  color: #6a5444;
+  font-size: 22rpx;
+}
+
+.action-chip-primary {
+  background: #315a33;
+  color: #fff;
+}
+
+.action-chip-danger {
+  background: #fff0ef;
+  color: #c84733;
 }
 
 .material-group {
@@ -148,29 +167,15 @@
   color: #37261b;
 }
 
-.supply-controls {
-  display: flex;
-  gap: 28rpx;
-  flex-wrap: wrap;
+.order-detail {
+  flex: 1;
+  min-width: 0;
 }
 
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.analytics-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  margin-bottom: 12rpx;
-}
-
-.analytics-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10rpx 0;
-  color: #6f5d4f;
+.order-text {
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.6;
 }
 
 .ledger-panel {
@@ -234,10 +239,15 @@
   box-shadow: inset 0 0 0 1rpx rgba(207, 186, 162, 0.28);
 }
 
-.ledger-form-title {
+.ledger-form-title,
+.analytics-title {
   font-size: 28rpx;
   font-weight: 700;
   color: #38281e;
+}
+
+.analytics-title {
+  margin-bottom: 12rpx;
 }
 
 .picker-field {
@@ -268,6 +278,77 @@
   color: #c84733;
 }
 
+.analytics-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10rpx 0;
+  color: #6f5d4f;
+}
+
 .btn-warm {
   background: linear-gradient(180deg, #d18a4a, #b8662d);
+}
+
+.editor-modal,
+.order-detail-modal {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fffdf9;
+  border-radius: 30rpx;
+  padding: 26rpx;
+  z-index: 120;
+  box-shadow: 0 24rpx 56rpx rgba(53, 29, 15, 0.24);
+}
+
+.order-detail-modal {
+  max-height: 76vh;
+  overflow-y: auto;
+}
+
+.editor-scroll {
+  height: 760rpx;
+}
+
+.editor-preview {
+  width: 100%;
+  height: 260rpx;
+  border-radius: 24rpx;
+  background: #f4ede4;
+}
+
+.editor-image-actions {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+}
+
+.editor-footer {
+  margin-top: 22rpx;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+
+.order-items-block {
+  margin-top: 24rpx;
+}
+
+.detail-item-row {
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f2ebe3;
+}
+
+.detail-item-row:last-child {
+  border-bottom: none;
+}
+
+.order-detail-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
 }

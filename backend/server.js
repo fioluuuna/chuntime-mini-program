@@ -1,18 +1,47 @@
+const fs = require("fs")
+const path = require("path")
 const http = require("http")
 const { URL } = require("url")
 const { readStore, writeStore, resetStore } = require("./lib/store")
 
 const port = process.env.PORT || 3007
+const uploadDir = path.join(__dirname, "public", "uploads")
+
+function ensureUploadDir() {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value))
+}
 
 function sendJson(res, statusCode, data) {
   const body = JSON.stringify(data)
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   })
   res.end(body)
+}
+
+function sendFile(res, filePath) {
+  const ext = path.extname(filePath).toLowerCase()
+  const typeMap = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+  }
+  const stream = fs.createReadStream(filePath)
+  res.writeHead(200, {
+    "Content-Type": typeMap[ext] || "application/octet-stream",
+    "Access-Control-Allow-Origin": "*",
+  })
+  stream.pipe(res)
 }
 
 function notFound(res) {
@@ -40,10 +69,6 @@ function readJson(req) {
   })
 }
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value))
-}
-
 function round2(value) {
   return Math.round(Number(value || 0) * 100) / 100
 }
@@ -54,6 +79,10 @@ function formatMoney(value) {
 
 function pad2(value) {
   return String(value).padStart(2, "0")
+}
+
+function createId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
 }
 
 function formatDateKey(input) {
@@ -114,6 +143,25 @@ function enrichMaterial(item) {
     ...item,
     statusKey,
     statusText: getMaterialStatusText(statusKey),
+  }
+}
+
+function enrichProduct(item) {
+  return {
+    ...item,
+    compareAtPrice: Number(item.compareAtPrice || item.price || 0),
+    isActive: item.isActive !== false,
+  }
+}
+
+function enrichCombo(item, products) {
+  const noodle = products.find((product) => product.id === item.noodleId)
+  return {
+    ...item,
+    noodleName: noodle ? noodle.name : "未绑定面食",
+    noodleImage: noodle ? noodle.image : "",
+    noodleStatus: noodle ? (noodle.isActive !== false ? "已上架" : "已下架") : "已删除",
+    isActive: item.isActive !== false,
   }
 }
 
@@ -210,7 +258,7 @@ function buildDashboard(store) {
       name: item.name,
       category: item.category,
       stock: item.stock,
-      remaining: item.stock,
+      isActive: item.isActive !== false,
     })),
     materials,
     materialAlerts,
@@ -235,28 +283,22 @@ function buildDashboard(store) {
         })),
     },
     ledgerOverview: todayLedger.summary,
-    reportText: `今日记账结余 ${todayLedger.summary.balanceText}，收入 ${todayLedger.summary.incomeText}，支出 ${todayLedger.summary.expenseText}。先看待确认订单，再看库存和物料预警。`,
+    reportText: `当日结余 ${todayLedger.summary.balanceText}，收入 ${todayLedger.summary.incomeText}，支出 ${todayLedger.summary.expenseText}。`,
   }
 }
 
-function updateOrderStatus(store, orderId, status) {
-  const order = store.orders.find((item) => item.id === orderId)
-  if (!order) {
-    throw new Error("订单不存在")
+function updateCustomerProfile(store, payload) {
+  const customerId = String(payload.customerId || payload.phone || createId("customer"))
+  store.customerProfiles = store.customerProfiles || {}
+  store.customerProfiles[customerId] = {
+    customerId,
+    name: payload.customerName || "",
+    phone: payload.phone || "",
+    address: payload.address || "",
+    remark: payload.remark || "",
+    updatedAt: formatTimestamp(new Date()),
   }
-  const previousStatus = order.status
-  order.status = status
-  if (status === "completed" && previousStatus !== "completed") {
-    store.member.points += Math.floor(Number(order.totals?.total || 0))
-    store.member.orderCount += 1
-    store.member.lastOrderAt = order.createdAt
-    if (store.member.orderCount >= 10) {
-      store.member.membership = "金卡会员"
-    } else if (store.member.orderCount >= 5) {
-      store.member.membership = "银卡会员"
-    }
-  }
-  return order
+  return customerId
 }
 
 function applyOrder(store, payload) {
@@ -286,7 +328,9 @@ function applyOrder(store, payload) {
     if (item.parts?.length) {
       for (const part of item.parts) {
         const product = store.products.find((entry) => entry.id === part.productId)
-        product.stock -= part.quantity * item.quantity
+        if (product) {
+          product.stock -= part.quantity * item.quantity
+        }
       }
       continue
     }
@@ -302,40 +346,61 @@ function applyOrder(store, payload) {
     (item) => String(item.productId).startsWith("soup-") || item.parts?.some((part) => String(part.productId).startsWith("soup-"))
   )
 
-  const materials = store.materials || []
   if (hasSoup) {
-    const box = materials.find((item) => item.id === "material-box")
+    const box = store.materials.find((item) => item.id === "material-box")
     if (box) {
       box.stock = Math.max(0, box.stock - totalQuantity)
     }
   }
 
   if (payload.fulfillmentType === "delivery") {
-    const bag = materials.find((item) => item.id === "material-bag")
+    const bag = store.materials.find((item) => item.id === "material-bag")
     if (bag) {
       bag.stock = Math.max(0, bag.stock - 1)
     }
   }
 
-  const cutlery = materials.find((item) => item.id === "material-cutlery")
+  const cutlery = store.materials.find((item) => item.id === "material-cutlery")
   if (cutlery) {
     cutlery.stock = Math.max(0, cutlery.stock - totalQuantity)
   }
 
+  const customerId = updateCustomerProfile(store, payload)
   const order = {
     id: `CT${Date.now()}`,
+    customerId,
     name: payload.customerName || "顾客",
     phone: payload.phone || "",
     fulfillmentType: payload.fulfillmentType || "pickup",
     address: payload.address || "",
     remark: payload.remark || "",
-    items,
+    items: clone(items),
     totals: payload.totals || {},
     status: "pending_payment",
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false }),
   }
 
   store.orders.unshift(order)
+  return order
+}
+
+function updateOrderStatus(store, orderId, status) {
+  const order = store.orders.find((item) => item.id === orderId)
+  if (!order) {
+    throw new Error("订单不存在")
+  }
+  const previousStatus = order.status
+  order.status = status
+  if (status === "completed" && previousStatus !== "completed") {
+    store.member.points += Math.floor(Number(order.totals?.total || 0))
+    store.member.orderCount += 1
+    store.member.lastOrderAt = order.createdAt
+    if (store.member.orderCount >= 10) {
+      store.member.membership = "金卡会员"
+    } else if (store.member.orderCount >= 5) {
+      store.member.membership = "银卡会员"
+    }
+  }
   return order
 }
 
@@ -349,7 +414,7 @@ function addLedgerEntry(store, type, payload = {}) {
   const dateKey = formatDateKey(payload.date) || getTodayDateKey()
   const day = ensureLedgerDay(store, dateKey)
   const entry = {
-    id: `${normalizedType}-${Date.now()}`,
+    id: createId(normalizedType),
     amount,
     remark: String(payload.remark || "").trim(),
     createdAt: formatTimestamp(new Date()),
@@ -366,6 +431,10 @@ function addLedgerEntry(store, type, payload = {}) {
   return buildLedgerSnapshot(day, dateKey)
 }
 
+function buildUploadUrl(fileName) {
+  return `http://127.0.0.1:${port}/uploads/${fileName}`
+}
+
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     sendJson(res, 200, { ok: true })
@@ -373,6 +442,18 @@ const server = http.createServer(async (req, res) => {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`)
+
+  if (req.method === "GET" && url.pathname.startsWith("/uploads/")) {
+    const fileName = path.basename(url.pathname)
+    const filePath = path.join(uploadDir, fileName)
+    if (!fs.existsSync(filePath)) {
+      notFound(res)
+      return
+    }
+    sendFile(res, filePath)
+    return
+  }
+
   const store = readStore()
 
   try {
@@ -397,7 +478,31 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/products") {
-      sendJson(res, 200, store.products)
+      sendJson(res, 200, (store.products || []).map(enrichProduct))
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/products") {
+      const payload = await readJson(req)
+      const product = {
+        id: createId(payload.category === "noodle" ? "noodle" : "soup"),
+        category: payload.category === "noodle" ? "noodle" : "soup",
+        name: String(payload.name || "").trim(),
+        price: round2(payload.price),
+        compareAtPrice: round2(payload.compareAtPrice || payload.price),
+        image: String(payload.image || "").trim(),
+        desc: String(payload.desc || "").trim(),
+        stock: Math.max(0, Number(payload.stock || 0)),
+        baseStock: Math.max(0, Number(payload.stock || 0)),
+        isActive: payload.isActive !== false,
+      }
+      if (!product.name || !product.price || !product.image) {
+        sendJson(res, 400, { error: "请完整填写菜品名称、价格和图片" })
+        return
+      }
+      store.products.unshift(product)
+      writeStore(store)
+      sendJson(res, 201, enrichProduct(product))
       return
     }
 
@@ -409,16 +514,122 @@ const server = http.createServer(async (req, res) => {
         notFound(res)
         return
       }
-      if (typeof payload.stock === "number") {
-        product.stock = Math.max(0, payload.stock)
+      if (payload.name !== undefined) product.name = String(payload.name || "").trim()
+      if (payload.category !== undefined) product.category = payload.category === "noodle" ? "noodle" : "soup"
+      if (payload.price !== undefined) product.price = round2(payload.price)
+      if (payload.compareAtPrice !== undefined) product.compareAtPrice = round2(payload.compareAtPrice || product.price)
+      if (payload.image !== undefined) product.image = String(payload.image || "").trim()
+      if (payload.desc !== undefined) product.desc = String(payload.desc || "").trim()
+      if (payload.stock !== undefined) product.stock = Math.max(0, Number(payload.stock || 0))
+      if (payload.isActive !== undefined) product.isActive = !!payload.isActive
+      writeStore(store)
+      sendJson(res, 200, enrichProduct(product))
+      return
+    }
+
+    if (req.method === "DELETE" && url.pathname.startsWith("/api/products/")) {
+      const productId = url.pathname.split("/").pop()
+      const index = store.products.findIndex((item) => item.id === productId)
+      if (index < 0) {
+        notFound(res)
+        return
+      }
+      const product = store.products[index]
+      store.products.splice(index, 1)
+      if (product.category === "noodle") {
+        ;(store.combos || []).forEach((combo) => {
+          if (combo.noodleId === productId) {
+            combo.isActive = false
+          }
+        })
       }
       writeStore(store)
-      sendJson(res, 200, product)
+      sendJson(res, 200, { ok: true })
+      return
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/combos") {
+      sendJson(res, 200, (store.combos || []).map((item) => enrichCombo(item, store.products || [])))
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/combos") {
+      const payload = await readJson(req)
+      const combo = {
+        id: createId("combo"),
+        name: String(payload.name || "").trim(),
+        price: round2(payload.price),
+        desc: String(payload.desc || "").trim(),
+        noodleId: String(payload.noodleId || ""),
+        maxSoupPrice: Math.max(0, round2(payload.maxSoupPrice)),
+        isActive: payload.isActive !== false,
+      }
+      if (!combo.name || !combo.price || !combo.noodleId) {
+        sendJson(res, 400, { error: "请完整填写套餐名称、价格和面食" })
+        return
+      }
+      store.combos.unshift(combo)
+      writeStore(store)
+      sendJson(res, 201, enrichCombo(combo, store.products || []))
+      return
+    }
+
+    if (req.method === "PATCH" && url.pathname.startsWith("/api/combos/")) {
+      const comboId = url.pathname.split("/").pop()
+      const payload = await readJson(req)
+      const combo = (store.combos || []).find((item) => item.id === comboId)
+      if (!combo) {
+        notFound(res)
+        return
+      }
+      if (payload.name !== undefined) combo.name = String(payload.name || "").trim()
+      if (payload.price !== undefined) combo.price = round2(payload.price)
+      if (payload.desc !== undefined) combo.desc = String(payload.desc || "").trim()
+      if (payload.noodleId !== undefined) combo.noodleId = String(payload.noodleId || "")
+      if (payload.maxSoupPrice !== undefined) combo.maxSoupPrice = Math.max(0, round2(payload.maxSoupPrice))
+      if (payload.isActive !== undefined) combo.isActive = !!payload.isActive
+      writeStore(store)
+      sendJson(res, 200, enrichCombo(combo, store.products || []))
+      return
+    }
+
+    if (req.method === "DELETE" && url.pathname.startsWith("/api/combos/")) {
+      const comboId = url.pathname.split("/").pop()
+      const index = (store.combos || []).findIndex((item) => item.id === comboId)
+      if (index < 0) {
+        notFound(res)
+        return
+      }
+      store.combos.splice(index, 1)
+      writeStore(store)
+      sendJson(res, 200, { ok: true })
       return
     }
 
     if (req.method === "GET" && (url.pathname === "/api/materials" || url.pathname === "/api/supplies")) {
       sendJson(res, 200, (store.materials || []).map(enrichMaterial))
+      return
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/materials") {
+      const payload = await readJson(req)
+      const groupKey = payload.groupKey === "kitchen" ? "kitchen" : "packaging"
+      const material = {
+        id: createId("material"),
+        name: String(payload.name || "").trim(),
+        groupKey,
+        groupLabel: groupKey === "kitchen" ? "食材辅料" : "包材耗材",
+        stock: Math.max(0, Number(payload.stock || 0)),
+        warningLine: Math.max(0, Number(payload.warningLine || 0)),
+        unit: String(payload.unit || "").trim() || "个",
+      }
+      if (!material.name) {
+        sendJson(res, 400, { error: "请输入物料名称" })
+        return
+      }
+      store.materials.unshift(material)
+      writeStore(store)
+      sendJson(res, 201, enrichMaterial(material))
       return
     }
 
@@ -433,14 +644,29 @@ const server = http.createServer(async (req, res) => {
         notFound(res)
         return
       }
-      if (typeof payload.stock === "number") {
-        material.stock = Math.max(0, payload.stock)
+      if (payload.name !== undefined) material.name = String(payload.name || "").trim()
+      if (payload.groupKey !== undefined) {
+        material.groupKey = payload.groupKey === "kitchen" ? "kitchen" : "packaging"
+        material.groupLabel = material.groupKey === "kitchen" ? "食材辅料" : "包材耗材"
       }
-      if (typeof payload.warningLine === "number") {
-        material.warningLine = Math.max(0, payload.warningLine)
-      }
+      if (payload.stock !== undefined) material.stock = Math.max(0, Number(payload.stock || 0))
+      if (payload.warningLine !== undefined) material.warningLine = Math.max(0, Number(payload.warningLine || 0))
+      if (payload.unit !== undefined) material.unit = String(payload.unit || "").trim() || material.unit
       writeStore(store)
       sendJson(res, 200, enrichMaterial(material))
+      return
+    }
+
+    if (req.method === "DELETE" && url.pathname.startsWith("/api/materials/")) {
+      const materialId = url.pathname.split("/").pop()
+      const index = (store.materials || []).findIndex((item) => item.id === materialId)
+      if (index < 0) {
+        notFound(res)
+        return
+      }
+      store.materials.splice(index, 1)
+      writeStore(store)
+      sendJson(res, 200, { ok: true })
       return
     }
 
@@ -514,6 +740,25 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === "POST" && url.pathname === "/api/uploads/base64") {
+      const payload = await readJson(req)
+      const base64 = String(payload.base64 || "").trim()
+      if (!base64) {
+        sendJson(res, 400, { error: "图片内容不能为空" })
+        return
+      }
+      ensureUploadDir()
+      const extension = String(payload.extension || "jpg").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "jpg"
+      const fileName = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}.${extension}`
+      const filePath = path.join(uploadDir, fileName)
+      fs.writeFileSync(filePath, Buffer.from(base64, "base64"))
+      sendJson(res, 201, {
+        url: buildUploadUrl(fileName),
+        path: `/uploads/${fileName}`,
+      })
+      return
+    }
+
     if (req.method === "GET" && url.pathname === "/api/dashboard") {
       sendJson(res, 200, buildDashboard(store))
       return
@@ -530,6 +775,8 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 500, { error: error.message || "Server error" })
   }
 })
+
+ensureUploadDir()
 
 server.listen(port, () => {
   console.log(`Chuntime backend listening on http://127.0.0.1:${port}`)

@@ -62,14 +62,111 @@ function getProducts() {
   return withFallback(() => request("/products"), () => localDb.getProducts())
 }
 
-function updateProductStock(productId, stock) {
+function addProduct(payload) {
+  return withFallback(
+    () =>
+      request("/products", {
+        method: "POST",
+        data: payload,
+      }),
+    () => localDb.addProduct(payload)
+  )
+}
+
+function updateProduct(productId, payload) {
   return withFallback(
     () =>
       request(`/products/${productId}`, {
         method: "PATCH",
-        data: { stock },
+        data: payload,
       }),
-    () => localDb.updateProductStock(productId, stock)
+    () => localDb.updateProduct(productId, payload)
+  )
+}
+
+function deleteProduct(productId) {
+  return withFallback(
+    () =>
+      request(`/products/${productId}`, {
+        method: "DELETE",
+      }),
+    () => localDb.deleteProduct(productId)
+  )
+}
+
+function updateProductStock(productId, stock) {
+  return updateProduct(productId, { stock })
+}
+
+function getCombos() {
+  return withFallback(() => request("/combos"), () => localDb.getCombos())
+}
+
+function addCombo(payload) {
+  return withFallback(
+    () =>
+      request("/combos", {
+        method: "POST",
+        data: payload,
+      }),
+    () => localDb.addCombo(payload)
+  )
+}
+
+function updateCombo(comboId, payload) {
+  return withFallback(
+    () =>
+      request(`/combos/${comboId}`, {
+        method: "PATCH",
+        data: payload,
+      }),
+    () => localDb.updateCombo(comboId, payload)
+  )
+}
+
+function deleteCombo(comboId) {
+  return withFallback(
+    () =>
+      request(`/combos/${comboId}`, {
+        method: "DELETE",
+      }),
+    () => localDb.deleteCombo(comboId)
+  )
+}
+
+function getMaterials() {
+  return withFallback(() => request("/materials"), () => localDb.getMaterials())
+}
+
+function addMaterial(payload) {
+  return withFallback(
+    () =>
+      request("/materials", {
+        method: "POST",
+        data: payload,
+      }),
+    () => localDb.addMaterial(payload)
+  )
+}
+
+function updateMaterial(materialId, payload) {
+  return withFallback(
+    () =>
+      request(`/materials/${materialId}`, {
+        method: "PATCH",
+        data: payload,
+      }),
+    () => localDb.updateMaterial(materialId, payload)
+  )
+}
+
+function deleteMaterial(materialId) {
+  return withFallback(
+    () =>
+      request(`/materials/${materialId}`, {
+        method: "DELETE",
+      }),
+    () => localDb.deleteMaterial(materialId)
   )
 }
 
@@ -117,21 +214,6 @@ function getMember() {
   return withFallback(() => request("/member"), () => localDb.getMember())
 }
 
-function getMaterials() {
-  return withFallback(() => request("/materials"), () => localDb.getMaterials())
-}
-
-function updateMaterial(materialId, payload) {
-  return withFallback(
-    () =>
-      request(`/materials/${materialId}`, {
-        method: "PATCH",
-        data: payload,
-      }),
-    () => localDb.updateMaterial(materialId, payload)
-  )
-}
-
 function getLedger(date) {
   const query = date ? `?date=${encodeURIComponent(date)}` : ""
   return withFallback(() => request(`/ledger${query}`), () => localDb.getLedger(date))
@@ -163,6 +245,17 @@ function getDashboard() {
   return withFallback(() => request("/dashboard"), () => localDb.getDashboard())
 }
 
+function uploadImageBase64(payload) {
+  return withFallback(
+    () =>
+      request("/uploads/base64", {
+        method: "POST",
+        data: payload,
+      }),
+    () => Promise.resolve({ url: payload.filePath || "", path: payload.filePath || "" })
+  )
+}
+
 function resetDemo() {
   return withFallback(
     () => request("/reset-demo", { method: "POST" }),
@@ -176,9 +269,18 @@ module.exports = {
   getConfig,
   ownerLogin,
   getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
   updateProductStock,
+  getCombos,
+  addCombo,
+  updateCombo,
+  deleteCombo,
   getMaterials,
+  addMaterial,
   updateMaterial,
+  deleteMaterial,
   getSupplies: getMaterials,
   updateSupply: updateMaterial,
   getOrders,
@@ -191,6 +293,7 @@ module.exports = {
   getLedger,
   addLedgerIncome,
   addLedgerExpense,
+  uploadImageBase64,
   resetDemo,
   getServiceMode() {
     return serviceMode

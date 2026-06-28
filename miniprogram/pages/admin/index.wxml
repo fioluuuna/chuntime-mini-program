@@ -3,7 +3,7 @@
     <view class="section-head">
       <view>
         <view class="title">店长后台</view>
-        <view class="subtitle">顾客端看不到这里。这里专门处理订单、库存、物料和日报。</view>
+        <view class="subtitle">顾客端看不到这里。你可以在手机上直接管理菜品、套餐、物料、订单和日报。</view>
       </view>
       <view class="btn btn-ghost" bindtap="logout">退出</view>
     </view>
@@ -25,10 +25,96 @@
 
   <view class="card">
     <view class="module-chips">
-      <view class="module-chip {{activeModule === 'orders' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="orders">订单管理</view>
-      <view class="module-chip {{activeModule === 'products' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="products">菜品库存</view>
+      <view class="module-chip {{activeModule === 'products' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="products">菜品管理</view>
+      <view class="module-chip {{activeModule === 'combos' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="combos">套餐管理</view>
       <view class="module-chip {{activeModule === 'materials' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="materials">物料管理</view>
+      <view class="module-chip {{activeModule === 'orders' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="orders">订单管理</view>
       <view class="module-chip {{activeModule === 'report' ? 'module-chip-active' : ''}}" bindtap="changeModule" data-module="report">日报统计</view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{activeModule === 'products'}}">
+    <view class="section-head">
+      <view>
+        <view class="section-title">菜品管理</view>
+        <view class="muted">支持新增、编辑、删除和上下架。</view>
+      </view>
+      <view class="btn" bindtap="openCreateProduct">新增菜品</view>
+    </view>
+
+    <view wx:for="{{products}}" wx:key="id" class="manage-row">
+      <image class="thumb-image" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="manage-body">
+        <view class="row space-between align-start">
+          <view class="manage-title">{{item.name}}</view>
+          <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
+        </view>
+        <view class="muted mt-8">分类：{{item.categoryText}} · 库存 {{item.stock}}</view>
+        <view class="muted mt-8">价格：¥{{item.priceText}} · 原价：¥{{item.compareAtPriceText}}</view>
+        <view class="manage-actions mt-16">
+          <view class="action-chip" bindtap="openEditProduct" data-id="{{item.id}}">编辑</view>
+          <view class="action-chip" bindtap="toggleProductStatus" data-id="{{item.id}}">{{item.isActive === false ? '上架' : '下架'}}</view>
+          <view class="action-chip action-chip-danger" bindtap="deleteProduct" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{activeModule === 'combos'}}">
+    <view class="section-head">
+      <view>
+        <view class="section-title">套餐管理</view>
+        <view class="muted">指定套餐对应的面食和配汤价格限制。</view>
+      </view>
+      <view class="btn" bindtap="openCreateCombo">新增套餐</view>
+    </view>
+
+    <view wx:for="{{combos}}" wx:key="id" class="manage-row manage-row-no-image">
+      <view class="manage-body">
+        <view class="row space-between align-start">
+          <view class="manage-title">{{item.name}}</view>
+          <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
+        </view>
+        <view class="muted mt-8">基础价：¥{{item.priceText}}</view>
+        <view class="muted mt-8">包含面食：{{item.noodleName}}</view>
+        <view class="muted mt-8">{{item.limitText}}</view>
+        <view class="manage-actions mt-16">
+          <view class="action-chip" bindtap="openEditCombo" data-id="{{item.id}}">编辑</view>
+          <view class="action-chip" bindtap="toggleComboStatus" data-id="{{item.id}}">{{item.isActive === false ? '上架' : '下架'}}</view>
+          <view class="action-chip action-chip-danger" bindtap="deleteCombo" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{activeModule === 'materials'}}">
+    <view class="section-head">
+      <view>
+        <view class="section-title">物料管理</view>
+        <view class="muted">统一管理包材耗材和食材辅料。</view>
+      </view>
+      <view class="btn" bindtap="openCreateMaterial">新增物料</view>
+    </view>
+
+    <view wx:for="{{materialGroups}}" wx:key="key" class="material-group">
+      <view class="material-group-head">
+        <view class="material-group-title">{{item.title}}</view>
+        <view class="muted">{{item.items.length}} 项</view>
+      </view>
+
+      <view wx:for="{{item.items}}" wx:key="id" class="manage-row manage-row-no-image">
+        <view class="manage-body">
+          <view class="row space-between align-start">
+            <view class="manage-title">{{item.name}}</view>
+            <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
+          </view>
+          <view class="muted mt-8">库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
+          <view class="manage-actions mt-16">
+            <view class="action-chip" bindtap="openEditMaterial" data-id="{{item.id}}">编辑</view>
+            <view class="action-chip action-chip-danger" bindtap="deleteMaterial" data-id="{{item.id}}">删除</view>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 
@@ -37,7 +123,6 @@
       <view class="section-title">订单管理</view>
       <view class="order-filters">
         <view class="filter-chip {{orderFilter === 'all' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="all">全部</view>
-        <view class="filter-chip {{orderFilter === 'pending_payment' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="pending_payment">待付款</view>
         <view class="filter-chip {{orderFilter === 'pending_confirm' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="pending_confirm">待确认</view>
         <view class="filter-chip {{orderFilter === 'completed' ? 'filter-chip-active' : ''}}" bindtap="changeOrderFilter" data-filter="completed">已完成</view>
       </view>
@@ -50,73 +135,13 @@
           <view class="muted mt-8">{{item.fulfillmentText}} · {{item.phone}}</view>
           <view class="muted mt-8 order-text">地址：{{item.address}}</view>
           <view wx:if="{{item.remark}}" class="muted mt-8 order-text">备注：{{item.remark}}</view>
-          <view class="muted mt-8">{{item.createdAt}} · 金额 {{item.totals.total}}</view>
+          <view class="muted mt-8">{{item.createdAt}} · 金额 ¥{{item.totals.total}}</view>
         </view>
         <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
       </view>
-      <view class="status-actions mt-16">
-        <view wx:if="{{item.status === 'pending_payment'}}" class="status-btn">等待顾客付款</view>
-        <view wx:if="{{item.status === 'pending_confirm'}}" class="status-btn status-btn-primary" bindtap="stepOrder" data-id="{{item.id}}" data-status="completed">确认收款</view>
-        <view wx:if="{{item.status !== 'completed'}}" class="status-btn" bindtap="stepOrder" data-id="{{item.id}}" data-status="completed">直接完成</view>
-      </view>
-    </view>
-  </view>
-
-  <view class="card" wx:if="{{activeModule === 'products'}}">
-    <view class="section-title">菜品库存管理</view>
-    <view wx:for="{{stocks}}" wx:key="id" class="stock-row">
-      <view class="row space-between">
-        <view>
-          <view class="stock-name">{{item.name}}</view>
-          <view class="muted">{{item.category === 'soup' ? '炖汤' : '面食'}} · 当前库存 {{item.stock}}</view>
-        </view>
-        <view class="stock-controls">
-          <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="-1">-</view>
-          <view class="stock-btn" bindtap="changeStock" data-id="{{item.id}}" data-delta="1">+</view>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <view class="card" wx:if="{{activeModule === 'materials'}}">
-    <view class="section-head">
-      <view>
-        <view class="section-title">物料管理</view>
-        <view class="muted">统一管理包材耗材和厨房食材/辅料，随时调整库存与预警线。</view>
-      </view>
-      <view class="tag">打开后台就知道缺什么</view>
-    </view>
-
-    <view wx:for="{{materialGroups}}" wx:key="key" class="material-group">
-      <view class="material-group-head">
-        <view class="material-group-title">{{item.title}}</view>
-        <view class="muted">{{item.items.length}} 项</view>
-      </view>
-
-      <view wx:for="{{item.items}}" wx:key="id" class="material-row">
-        <view class="row space-between align-start">
-          <view>
-            <view class="stock-name">{{item.name}}</view>
-            <view class="muted mt-8">当前库存 {{item.stock}}{{item.unit}} · 预警线 {{item.warningLine}}{{item.unit}}</view>
-          </view>
-          <view class="status-pill status-pill-{{item.statusClass}}">{{item.statusText}}</view>
-        </view>
-        <view class="supply-controls mt-16">
-          <view class="control-group">
-            <view class="muted">改库存</view>
-            <view class="stock-controls">
-              <view class="stock-btn" bindtap="changeMaterialStock" data-id="{{item.id}}" data-delta="-1">-</view>
-              <view class="stock-btn" bindtap="changeMaterialStock" data-id="{{item.id}}" data-delta="1">+</view>
-            </view>
-          </view>
-          <view class="control-group">
-            <view class="muted">改预警线</view>
-            <view class="stock-controls">
-              <view class="stock-btn" bindtap="changeMaterialWarning" data-id="{{item.id}}" data-delta="-1">-</view>
-              <view class="stock-btn" bindtap="changeMaterialWarning" data-id="{{item.id}}" data-delta="1">+</view>
-            </view>
-          </view>
-        </view>
+      <view class="manage-actions mt-16">
+        <view class="action-chip" bindtap="openOrderDetail" data-id="{{item.id}}">查看详情</view>
+        <view wx:if="{{item.status === 'pending_confirm'}}" class="action-chip action-chip-primary" bindtap="stepOrder" data-id="{{item.id}}" data-status="completed">确认收款</view>
       </view>
     </view>
   </view>
@@ -239,5 +264,90 @@
   <view class="card">
     <view class="section-title">店长常用动作</view>
     <view class="btn" bindtap="resetDemoData">重置演示数据</view>
+  </view>
+
+  <view class="mask" wx:if="{{editorVisible}}" bindtap="closeEditor"></view>
+  <view class="editor-modal" wx:if="{{editorVisible}}">
+    <view class="section-head">
+      <view class="editor-title">{{editorTitle}}</view>
+      <view class="btn btn-ghost" bindtap="closeEditor">关闭</view>
+    </view>
+
+    <scroll-view scroll-y class="editor-scroll">
+      <view wx:if="{{editorType === 'product'}}">
+        <image wx:if="{{productForm.image}}" class="editor-preview" src="{{productForm.image}}" mode="aspectFill"></image>
+        <view class="editor-image-actions">
+          <view class="action-chip" bindtap="chooseProductImage" data-source="album">相册选图</view>
+          <view class="action-chip" bindtap="chooseProductImage" data-source="camera">拍照上传</view>
+          <view wx:if="{{imageUploading}}" class="muted">图片上传中...</view>
+        </view>
+        <input class="input" value="{{productForm.name}}" data-field="name" bindinput="bindFormField" placeholder="菜品名称" placeholder-class="field-placeholder" />
+        <input class="input" type="digit" value="{{productForm.price}}" data-field="price" bindinput="bindFormField" placeholder="价格" placeholder-class="field-placeholder" />
+        <input class="input" type="digit" value="{{productForm.compareAtPrice}}" data-field="compareAtPrice" bindinput="bindFormField" placeholder="原价" placeholder-class="field-placeholder" />
+        <picker mode="selector" range="{{['炖汤','面食']}}" value="{{productCategoryIndex}}" bindchange="chooseProductCategory">
+          <view class="picker-field mt-16">分类：{{productCategoryIndex === 0 ? '炖汤' : '面食'}}</view>
+        </picker>
+        <input class="input" type="number" value="{{productForm.stock}}" data-field="stock" bindinput="bindFormField" placeholder="库存数量" placeholder-class="field-placeholder" />
+        <textarea class="textarea" value="{{productForm.desc}}" data-field="desc" bindinput="bindFormField" placeholder="菜品描述" placeholder-class="field-placeholder"></textarea>
+      </view>
+
+      <view wx:if="{{editorType === 'combo'}}">
+        <input class="input" value="{{comboForm.name}}" data-field="name" bindinput="bindFormField" placeholder="套餐名称" placeholder-class="field-placeholder" />
+        <input class="input" type="digit" value="{{comboForm.price}}" data-field="price" bindinput="bindFormField" placeholder="套餐基础价" placeholder-class="field-placeholder" />
+        <picker mode="selector" range="{{comboNoodleOptions}}" range-key="name" value="{{comboNoodleIndex}}" bindchange="chooseComboNoodle">
+          <view class="picker-field mt-16">包含面食：{{comboNoodleOptions[comboNoodleIndex] ? comboNoodleOptions[comboNoodleIndex].name : '请选择'}}</view>
+        </picker>
+        <input class="input" type="digit" value="{{comboForm.maxSoupPrice}}" data-field="maxSoupPrice" bindinput="bindFormField" placeholder="配汤价格限制，0=不限" placeholder-class="field-placeholder" />
+        <textarea class="textarea" value="{{comboForm.desc}}" data-field="desc" bindinput="bindFormField" placeholder="套餐描述" placeholder-class="field-placeholder"></textarea>
+      </view>
+
+      <view wx:if="{{editorType === 'material'}}">
+        <input class="input" value="{{materialForm.name}}" data-field="name" bindinput="bindFormField" placeholder="物料名称" placeholder-class="field-placeholder" />
+        <picker mode="selector" range="{{['包材耗材','食材辅料']}}" value="{{materialGroupIndex}}" bindchange="chooseMaterialGroup">
+          <view class="picker-field mt-16">分类：{{materialGroupIndex === 0 ? '包材耗材' : '食材辅料'}}</view>
+        </picker>
+        <input class="input" value="{{materialForm.unit}}" data-field="unit" bindinput="bindFormField" placeholder="单位" placeholder-class="field-placeholder" />
+        <input class="input" type="number" value="{{materialForm.stock}}" data-field="stock" bindinput="bindFormField" placeholder="当前库存" placeholder-class="field-placeholder" />
+        <input class="input" type="number" value="{{materialForm.warningLine}}" data-field="warningLine" bindinput="bindFormField" placeholder="预警线" placeholder-class="field-placeholder" />
+      </view>
+    </scroll-view>
+
+    <view class="editor-footer">
+      <view class="btn btn-ghost" bindtap="closeEditor">取消</view>
+      <view class="btn" bindtap="saveEditor">保存</view>
+    </view>
+  </view>
+
+  <view class="mask" wx:if="{{showOrderDetail}}" bindtap="closeOrderDetail"></view>
+  <view class="order-detail-modal" wx:if="{{showOrderDetail && currentOrder}}">
+    <view class="section-head">
+      <view>
+        <view class="editor-title">订单详情</view>
+        <view class="muted mt-8">{{currentOrder.id}} · {{currentOrder.statusText}}</view>
+      </view>
+      <view class="btn btn-ghost" bindtap="closeOrderDetail">关闭</view>
+    </view>
+    <view class="muted mt-12">联系人：{{currentOrder.name}}</view>
+    <view class="muted mt-8">电话：{{currentOrder.phone}}</view>
+    <view class="muted mt-8 order-text">地址：{{currentOrder.address}}</view>
+    <view wx:if="{{currentOrder.remark}}" class="muted mt-8 order-text">备注：{{currentOrder.remark}}</view>
+    <view class="muted mt-8">方式：{{currentOrder.fulfillmentText}}</view>
+    <view class="muted mt-8">金额：¥{{currentOrder.totals.total}}</view>
+    <view class="muted mt-8">下单时间：{{currentOrder.createdAt}}</view>
+
+    <view class="order-items-block">
+      <view class="section-title">菜品明细</view>
+      <view wx:for="{{currentOrder.items}}" wx:key="productId" class="detail-item-row">
+        <view class="row space-between align-start">
+          <view class="order-detail-name">{{item.productName}}</view>
+          <view>×{{item.quantity}}</view>
+        </view>
+        <view wx:if="{{item.parts && item.parts.length}}" class="muted mt-8">
+          {{item.parts[0].productName}} + {{item.parts[1].productName}}
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentOrder.status === 'pending_confirm'}}" class="btn mt-24" bindtap="stepOrder" data-id="{{currentOrder.id}}" data-status="completed">确认收款</view>
   </view>
 </view>

@@ -2,10 +2,26 @@ const KEYS = {
   cart: "ct_cart",
   ownedOrders: "ct_owned_orders",
   ownerSession: "ct_owner_session",
+  customerId: "ct_customer_id",
+  customerProfile: "ct_customer_profile",
 }
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
+}
+
+function createCustomerId() {
+  return `customer-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+}
+
+function getDefaultCustomerProfile() {
+  return {
+    customerId: "",
+    name: "",
+    phone: "",
+    address: "意库",
+    remark: "",
+  }
 }
 
 function ensureState() {
@@ -17,6 +33,39 @@ function ensureState() {
   if (!ownedOrders) {
     wx.setStorageSync(KEYS.ownedOrders, [])
   }
+  const customerId = wx.getStorageSync(KEYS.customerId)
+  if (!customerId) {
+    wx.setStorageSync(KEYS.customerId, createCustomerId())
+  }
+  const customerProfile = wx.getStorageSync(KEYS.customerProfile)
+  if (!customerProfile) {
+    wx.setStorageSync(KEYS.customerProfile, getDefaultCustomerProfile())
+  }
+}
+
+function getCustomerId() {
+  ensureState()
+  return wx.getStorageSync(KEYS.customerId)
+}
+
+function getCustomerProfile() {
+  ensureState()
+  const profile = clone(wx.getStorageSync(KEYS.customerProfile))
+  return {
+    ...getDefaultCustomerProfile(),
+    ...profile,
+    customerId: getCustomerId(),
+  }
+}
+
+function saveCustomerProfile(profile) {
+  const nextProfile = {
+    ...getCustomerProfile(),
+    ...clone(profile || {}),
+    customerId: getCustomerId(),
+  }
+  wx.setStorageSync(KEYS.customerProfile, nextProfile)
+  return nextProfile
 }
 
 function getCart() {
@@ -37,6 +86,8 @@ function addCartItem({
   category,
   quantity = 1,
   parts = [],
+  comboId = "",
+  remark = "",
 }) {
   const cart = getCart()
   const index = cart.findIndex((item) => item.productId === productId)
@@ -57,6 +108,8 @@ function addCartItem({
       category,
       quantity,
       parts,
+      comboId,
+      remark,
     })
   }
   saveCart(cart)
@@ -108,29 +161,31 @@ function clearOwnerSession() {
 }
 
 function calculateCartTotals(cart, discountRate, deliveryFee, fulfillmentType = "delivery") {
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const discountedSubtotal = Math.round(subtotal * 100) / 100
-  const shipping = cart.length && fulfillmentType === "delivery" ? deliveryFee : 0
-  const total = Math.round((discountedSubtotal + shipping) * 100) / 100
-  const originalSubtotal = cart.reduce((sum, item) => {
-    if (item.parts?.length) {
-      const partSum = item.parts.reduce((partTotal, part) => partTotal + (part.originalPrice || 0) * part.quantity, 0)
-      return sum + partSum * item.quantity
-    }
-    return sum + (item.originalPrice || item.price) * item.quantity
-  }, 0)
+  const discountedSubtotal = roundCurrency(cart.reduce((sum, item) => sum + Number(item.price || 0) * item.quantity, 0))
+  const shipping = cart.length && fulfillmentType === "delivery" ? Number(deliveryFee || 0) : 0
+  const total = roundCurrency(discountedSubtotal + shipping)
+  const originalSubtotal = roundCurrency(
+    cart.reduce((sum, item) => sum + Number(item.originalPrice || item.price || 0) * item.quantity, 0)
+  )
   return {
-    subtotal: Math.round(originalSubtotal * 100) / 100,
+    subtotal: originalSubtotal,
     discountedSubtotal,
     shipping,
     total,
-    savings: Math.round((originalSubtotal - discountedSubtotal) * 100) / 100,
+    savings: roundCurrency(originalSubtotal - discountedSubtotal),
   }
+}
+
+function roundCurrency(value) {
+  return Math.round(Number(value || 0) * 100) / 100
 }
 
 module.exports = {
   KEYS,
   ensureState,
+  getCustomerId,
+  getCustomerProfile,
+  saveCustomerProfile,
   getCart,
   saveCart,
   addCartItem,

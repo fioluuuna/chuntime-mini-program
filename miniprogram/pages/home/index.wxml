@@ -9,8 +9,9 @@
     <view class="hero-mask"></view>
     <view class="hero-content">
       <view class="hero-logo-area" bindtap="handleLogoTap">
+        <view class="hero-season-tag">{{seasonTheme.title}}</view>
         <view class="hero-title">{{shop.name}}</view>
-        <view class="hero-subtitle">把时间炖进汤里，让每一份外卖都像刚从灶边端出来。</view>
+        <view class="hero-subtitle">{{seasonTheme.copy}}</view>
       </view>
       <view class="hero-pills">
         <text class="pill">{{shop.hours}}</text>
@@ -32,9 +33,9 @@
         <view class="quick-desc">炖汤、面食、套餐都能直接选，不用再手写备注。</view>
       </view>
       <view class="quick-item" bindtap="goTo" data-page="member">
-        <view class="icon-circle">享</view>
+        <view class="icon-circle">会</view>
         <view class="quick-title">会员权益</view>
-        <view class="quick-desc">积分抵扣、老客券、充值活动都放在这里。</view>
+        <view class="quick-desc">积分抵扣、老客优惠、充值活动都放在这里。</view>
       </view>
       <view class="quick-item" bindtap="copyAddress">
         <view class="icon-circle">路</view>
@@ -93,7 +94,7 @@
               <view class="row space-between mt-20 align-start">
                 <view class="signature-price-group">
                   <view class="signature-price">¥{{item.salePriceText}}</view>
-                  <view class="signature-old-price">原价 ¥{{item.originalText}}</view>
+                  <view class="signature-old-price">门市价 ¥{{item.originalText}}</view>
                 </view>
                 <view class="signature-stock">{{item.stock}} 份可点</view>
               </view>
@@ -147,14 +148,16 @@
         </view>
       </view>
       <view class="fresh-visual-side">
-        <view wx:for="{{freshScenes}}" wx:key="id" wx:if="{{index > 0}}" class="fresh-visual-side-item">
-          <image class="fresh-visual-image side-image" src="{{item.image}}" mode="aspectFill"></image>
-          <view class="fresh-overlay"></view>
-          <view class="fresh-overlay-text side-text">
-            <view class="fresh-overlay-tag">{{item.overlay}}</view>
-            <view class="fresh-overlay-title">{{item.title}}</view>
+        <block wx:for="{{freshScenes}}" wx:key="id">
+          <view wx:if="{{index > 0}}" class="fresh-visual-side-item">
+            <image class="fresh-visual-image side-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="fresh-overlay"></view>
+            <view class="fresh-overlay-text side-text">
+              <view class="fresh-overlay-tag">{{item.overlay}}</view>
+              <view class="fresh-overlay-title">{{item.title}}</view>
+            </view>
           </view>
-        </view>
+        </block>
       </view>
     </view>
   </view>

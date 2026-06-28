@@ -3,7 +3,7 @@
     <view class="section-head">
       <view>
         <view class="title">今天想喝什么</view>
-        <view class="subtitle">先选汤，再决定要不要加面。套餐支持直接搭配一个汤和一个面，系统自动算价。</view>
+        <view class="subtitle">汤、面、套餐都能直接点。套餐会自动按你选的汤计算价格，不用再写备注说明。</view>
       </view>
       <view class="tag">{{shop.openingDiscountText}}</view>
     </view>
@@ -40,7 +40,7 @@
             </view>
             <view class="muted mt-8">{{item.desc}}</view>
             <view class="row space-between mt-12 align-start">
-              <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
+              <view class="muted">门市价 ¥{{item.basePriceText}} · 剩余 {{item.stock}} 份</view>
               <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
                 {{item.soldOut ? '售罄' : '+'}}
               </view>
@@ -63,7 +63,7 @@
             </view>
             <view class="muted mt-8">{{item.desc}}</view>
             <view class="row space-between mt-12 align-start">
-              <view class="muted">原价 ¥{{item.originalText}} · 剩余 {{item.stock}} 份</view>
+              <view class="muted">门市价 ¥{{item.basePriceText}} · 剩余 {{item.stock}} 份</view>
               <view class="add-btn {{item.soldOut ? 'add-btn-disabled' : ''}}" bindtap="addById" data-id="{{item.id}}">
                 {{item.soldOut ? '售罄' : '+'}}
               </view>
@@ -74,45 +74,27 @@
 
       <view class="card content-card section-anchor" id="section-combo">
         <view class="section-title">套餐</view>
-        <view class="muted">任意选 1 份汤 + 1 份面，不需要备注，系统会直接算好价格。</view>
+        <view class="muted">先选套餐，再选符合条件的汤，系统会自动算好价格。</view>
 
-        <view class="combo-section">
-          <view class="combo-label">先选汤</view>
-          <view class="chip-wrap">
-            <view
-              wx:for="{{soups}}"
-              wx:key="id"
-              class="choice-chip {{selectedSoupId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
-              bindtap="chooseComboSoup"
-              data-id="{{item.id}}"
-            >
-              {{item.name}}
+        <view wx:for="{{combos}}" wx:key="id" class="combo-card">
+          <image class="combo-image" src="{{item.noodleImage}}" mode="aspectFill"></image>
+          <view class="combo-body">
+            <view class="row space-between align-start">
+              <view class="combo-name">{{item.name}}</view>
+              <view class="price">¥{{item.startingPriceText}} 起</view>
+            </view>
+            <view class="muted mt-8">{{item.desc}}</view>
+            <view class="combo-tags mt-16">
+              <view class="combo-tag">{{item.noodleName}}</view>
+              <view class="combo-tag combo-tag-light">{{item.limitText}}</view>
+            </view>
+            <view class="row space-between mt-16 align-start">
+              <view class="muted">{{item.noodleDesc}}</view>
+              <view class="btn combo-btn {{item.isAvailable ? '' : 'combo-btn-disabled'}}" bindtap="openCombo" data-id="{{item.id}}">
+                {{item.isAvailable ? '选汤加入' : '暂不可点'}}
+              </view>
             </view>
           </view>
-        </view>
-
-        <view class="combo-section">
-          <view class="combo-label">再选面</view>
-          <view class="chip-wrap">
-            <view
-              wx:for="{{noodles}}"
-              wx:key="id"
-              class="choice-chip {{selectedNoodleId === item.id ? 'choice-chip-active' : ''}} {{item.soldOut ? 'choice-chip-disabled' : ''}}"
-              bindtap="chooseComboNoodle"
-              data-id="{{item.id}}"
-            >
-              {{item.name}}
-            </view>
-          </view>
-        </view>
-
-        <view class="soft-panel mt-20" wx:if="{{comboSummary}}">
-          <view class="combo-row"><text>汤品</text><text>{{comboSummary.soup.name}}</text></view>
-          <view class="combo-row"><text>面食</text><text>{{comboSummary.noodle.name}}</text></view>
-          <view class="combo-row"><text>原价</text><text>¥{{comboSummary.originalText}}</text></view>
-          <view class="combo-row"><text>折后</text><text class="price">¥{{comboSummary.finalText}}</text></view>
-          <view class="combo-row"><text>本单立省</text><text>¥{{comboSummary.savingsText}}</text></view>
-          <view class="btn mt-20" bindtap="addCombo">加入套餐</view>
         </view>
       </view>
     </view>
@@ -125,6 +107,47 @@
         <view class="muted">共 {{cartCount}} 件 · 小计 ¥{{cartTotalText}}</view>
       </view>
       <view class="btn" bindtap="goCheckout">去结算</view>
+    </view>
+  </view>
+
+  <view class="mask" wx:if="{{showComboPicker}}" bindtap="closeComboPicker"></view>
+  <view class="combo-modal" wx:if="{{showComboPicker}}">
+    <view class="section-head">
+      <view>
+        <view class="section-title">{{activeCombo.name}}</view>
+        <view class="muted">{{activeCombo.limitText}}</view>
+      </view>
+      <view class="btn btn-ghost combo-close" bindtap="closeComboPicker">关闭</view>
+    </view>
+
+    <view class="combo-select-title">选一份汤</view>
+    <view class="combo-option-list">
+      <view
+        wx:for="{{comboSoupOptions}}"
+        wx:key="id"
+        class="combo-option {{selectedComboSoupId === item.id ? 'combo-option-active' : ''}}"
+        bindtap="chooseComboSoup"
+        data-id="{{item.id}}"
+      >
+        <image class="combo-option-image" src="{{item.image}}" mode="aspectFill"></image>
+        <view class="combo-option-body">
+          <view class="row space-between align-start">
+            <view class="combo-option-name">{{item.name}}</view>
+            <view class="price">¥{{item.salePriceText}}</view>
+          </view>
+          <view class="muted mt-8">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="soft-panel mt-20" wx:if="{{comboDraft}}">
+      <view class="combo-row"><text>套餐</text><text>{{comboDraft.combo.name}}</text></view>
+      <view class="combo-row"><text>面食</text><text>{{comboDraft.combo.noodleName}}</text></view>
+      <view class="combo-row"><text>汤品</text><text>{{comboDraft.soup.name}}</text></view>
+      <view class="combo-row"><text>门市价</text><text>¥{{comboDraft.originalText}}</text></view>
+      <view class="combo-row"><text>折后价</text><text class="price">¥{{comboDraft.finalText}}</text></view>
+      <view class="combo-row"><text>本单已省</text><text>¥{{comboDraft.savingsText}}</text></view>
+      <view class="btn mt-20" bindtap="confirmComboAdd">加入购物车</view>
     </view>
   </view>
 </view>

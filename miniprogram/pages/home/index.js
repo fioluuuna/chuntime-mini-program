@@ -1,6 +1,7 @@
 const { catalog, discounted, toPriceText } = require("../../utils/pricing")
 const { getProducts, getConfig } = require("../../utils/api")
 const { ensureState, setOwnerSession } = require("../../utils/state")
+const { getSolarTermTheme } = require("../../utils/solar-terms")
 
 const SIGNATURE_COPY = {
   "soup-02": "慢炖数小时，汤头温润耐喝，很多人第一单就会点它。",
@@ -35,25 +36,27 @@ Page({
     showOwnerModal: false,
     ownerCode: "",
     currentSwiper: 0,
+    seasonTheme: getSolarTermTheme(new Date()),
   },
 
   async onShow() {
     ensureState()
+    const seasonTheme = getSolarTermTheme(new Date())
     let config = this.data.shop
     let products = catalog.soups.map((item) => ({ ...item, category: "soup" }))
 
     try {
       ;[config, products] = await Promise.all([getConfig(), getProducts()])
     } catch (error) {
-      // Fall back to local catalog data when remote service is unavailable.
+      // Use local catalog fallback.
     }
 
     const sourceSoupMap = new Map(catalog.soups.map((item) => [item.id, item]))
-    const signatureSoups = products
-      .filter((item) => item.category === "soup")
+    const activeSoups = products.filter((item) => item.category === "soup" && item.isActive !== false)
+    const signatureSoups = activeSoups
       .map((item) => {
         const source = sourceSoupMap.get(item.id) || {}
-        const baseStock = Number(source.baseStock || item.stock || 0)
+        const baseStock = Number(source.baseStock || item.baseStock || item.stock || 0)
         const soldCount = Math.max(0, baseStock - Number(item.stock || 0))
         return {
           ...item,
@@ -73,6 +76,8 @@ Page({
 
     this.setData({
       shop: { ...this.data.shop, ...config },
+      heroImage: seasonTheme.image || catalog.images.hero,
+      seasonTheme,
       signatureSoups,
       freshScenes: [
         {
@@ -84,7 +89,7 @@ Page({
         {
           id: "scene-02",
           image: "/assets/images/dish-03.jpg",
-          overlay: "拒绝预制，现点现炖",
+          overlay: "拒绝预制，现点现做",
           title: "不是流水线热一热，送到手上的时候应该还带着香气。",
         },
         {
@@ -94,7 +99,7 @@ Page({
           title: "想做的是让人喝完会记住的那种舒服和满足。",
         },
       ],
-      availableCount: products.filter((item) => Number(item.stock || 0) > 0).length,
+      availableCount: products.filter((item) => item.isActive !== false && Number(item.stock || 0) > 0).length,
     })
   },
 

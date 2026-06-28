@@ -8,6 +8,9 @@ const {
   calculateCartTotals,
   getOwnedOrderIds,
   addOwnedOrderId,
+  getCustomerId,
+  getCustomerProfile,
+  saveCustomerProfile,
 } = require("../../utils/state")
 
 function getOrderStatusText(status) {
@@ -46,12 +49,19 @@ Page({
     phone: "",
     address: "意库",
     remark: "",
+    customerProfileId: "",
+    rememberHint: "",
     totals: {
       subtotal: 0,
       discountedSubtotal: 0,
       shipping: 0,
       total: 0,
       savings: 0,
+      subtotalText: "0.00",
+      discountedSubtotalText: "0.00",
+      shippingText: "0.00",
+      totalText: "0.00",
+      savingsText: "0.00",
     },
   },
 
@@ -67,21 +77,25 @@ Page({
     }
 
     const ownedIds = getOwnedOrderIds()
+    const profile = getCustomerProfile()
+    const fulfillmentType = profile.address === "到店自取" ? "pickup" : this.data.fulfillmentType
     this.setData({
       shop: { ...this.data.shop, ...config },
       myOrders: orders.filter((item) => ownedIds.includes(item.id)).map(mapMyOrder),
+      customerProfileId: getCustomerId(),
+      customerName: profile.name || "",
+      phone: profile.phone || "",
+      address: profile.address || "意库",
+      remark: profile.remark || "",
+      fulfillmentType,
+      rememberHint: profile.remark ? "已自动带出上次备注，可直接修改。" : "",
     })
     this.refreshCart()
   },
 
   refreshCart() {
     const cart = getCart()
-    const totals = calculateCartTotals(
-      cart,
-      this.data.shop.discountRate,
-      this.data.shop.deliveryFee,
-      this.data.fulfillmentType
-    )
+    const totals = calculateCartTotals(cart, this.data.shop.discountRate, this.data.shop.deliveryFee, this.data.fulfillmentType)
     this.setData({
       cart,
       totals: {
@@ -149,8 +163,10 @@ Page({
       wx.showToast({ title: "请先填写配送地址", icon: "none" })
       return
     }
+
     try {
       const order = await createOrder({
+        customerId: this.data.customerProfileId || getCustomerId(),
         customerName: this.data.customerName,
         phone: this.data.phone,
         fulfillmentType: this.data.fulfillmentType,
@@ -159,13 +175,17 @@ Page({
         items: this.data.cart,
         totals: this.data.totals,
       })
+
+      saveCustomerProfile({
+        name: this.data.customerName,
+        phone: this.data.phone,
+        address: this.data.address,
+        remark: this.data.remark,
+      })
       addOwnedOrderId(order.id)
       clearCart()
       this.setData({
-        customerName: "",
-        phone: "",
-        address: this.data.fulfillmentType === "pickup" ? "到店自取" : "意库",
-        remark: "",
+        rememberHint: this.data.remark ? "备注已记住，下次会自动带出。" : "",
       })
       this.refreshCart()
       wx.navigateTo({ url: `/pages/payment/index?orderId=${order.id}` })

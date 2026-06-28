@@ -89,17 +89,18 @@
     </view>
     <textarea
       class="textarea remark-area"
-      placeholder="备注，比如少辣、到店前联系我"
+      placeholder="备注，比如少盐、不要葱、到店前联系我"
       placeholder-class="field-placeholder"
       value="{{remark}}"
       data-field="remark"
       bindinput="bindInput"
     ></textarea>
+    <view wx:if="{{rememberHint}}" class="muted mt-12">{{rememberHint}}</view>
   </view>
 
   <view class="card">
     <view class="section-title">结算汇总</view>
-    <view class="result-row"><text>原价小计</text><text>¥{{totals.subtotalText}}</text></view>
+    <view class="result-row"><text>门市价小计</text><text>¥{{totals.subtotalText}}</text></view>
     <view class="result-row"><text>折后小计</text><text>¥{{totals.discountedSubtotalText}}</text></view>
     <view class="result-row"><text>配送费</text><text>¥{{totals.shippingText}}</text></view>
     <view class="result-row"><text>本单已省</text><text>¥{{totals.savingsText}}</text></view>

@@ -96,37 +96,137 @@
   font-size: 22rpx;
 }
 
-.combo-section {
-  margin-top: 24rpx;
+.combo-card {
+  display: flex;
+  gap: 18rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f1e8de;
 }
 
-.combo-label {
-  font-size: 26rpx;
+.combo-card:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.combo-image {
+  width: 152rpx;
+  height: 152rpx;
+  border-radius: 22rpx;
+  background: #f6ecdf;
+  flex: 0 0 auto;
+}
+
+.combo-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.combo-name {
+  flex: 1;
+  font-size: 28rpx;
   font-weight: 700;
-  margin-bottom: 14rpx;
+  padding-right: 14rpx;
 }
 
-.chip-wrap {
+.combo-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 14rpx;
+  gap: 10rpx;
 }
 
-.choice-chip {
-  padding: 14rpx 18rpx;
+.combo-tag {
+  padding: 10rpx 14rpx;
   border-radius: 999rpx;
-  background: #f6eee4;
-  color: #6f5d4f;
+  background: #f8ead8;
+  color: #8a552c;
   font-size: 22rpx;
 }
 
-.choice-chip-active {
-  background: #8f3f22;
-  color: #fff;
+.combo-tag-light {
+  background: #f3f1eb;
+  color: #6f6257;
 }
 
-.choice-chip-disabled {
+.combo-btn {
+  padding: 14rpx 20rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  white-space: nowrap;
+}
+
+.combo-btn-disabled {
   opacity: 0.45;
+}
+
+.sticky-summary {
+  position: sticky;
+  bottom: 18rpx;
+  z-index: 10;
+}
+
+.combo-modal {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 24rpx;
+  max-height: 78vh;
+  overflow-y: auto;
+  border-radius: 32rpx;
+  background: #fffdf9;
+  padding: 26rpx;
+  z-index: 110;
+  box-shadow: 0 24rpx 56rpx rgba(53, 29, 15, 0.22);
+}
+
+.combo-close {
+  padding-left: 22rpx;
+  padding-right: 22rpx;
+}
+
+.combo-select-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #342217;
+}
+
+.combo-option-list {
+  margin-top: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.combo-option {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx;
+  border-radius: 24rpx;
+  background: #f8f1e8;
+  border: 2rpx solid transparent;
+}
+
+.combo-option-active {
+  border-color: #b86130;
+  background: #fff6ee;
+}
+
+.combo-option-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 20rpx;
+  flex: 0 0 auto;
+}
+
+.combo-option-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.combo-option-name {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 700;
+  padding-right: 14rpx;
 }
 
 .combo-row {
@@ -138,10 +238,4 @@
 
 .combo-row:last-child {
   border-bottom: none;
-}
-
-.sticky-summary {
-  position: sticky;
-  bottom: 18rpx;
-  z-index: 10;
 }

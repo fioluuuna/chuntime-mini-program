@@ -1,18 +1,36 @@
 const {
   getDashboard,
-  updateProductStock,
+  getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  getCombos,
+  addCombo,
+  updateCombo,
+  deleteCombo,
+  getMaterials,
+  addMaterial,
   updateMaterial,
+  deleteMaterial,
   resetDemo,
   getOrders,
   updateOrderStatus,
-  getMaterials,
   getLedger,
   addLedgerIncome,
   addLedgerExpense,
+  uploadImageBase64,
 } = require("../../utils/api")
 const { hasOwnerSession, clearOwnerSession } = require("../../utils/state")
 
 const MATERIAL_GROUP_ORDER = ["packaging", "kitchen"]
+const PRODUCT_CATEGORY_OPTIONS = [
+  { label: "炖汤", value: "soup" },
+  { label: "面食", value: "noodle" },
+]
+const MATERIAL_GROUP_OPTIONS = [
+  { label: "包材耗材", value: "packaging" },
+  { label: "食材辅料", value: "kitchen" },
+]
 
 function getTodayDate() {
   const now = new Date()
@@ -45,7 +63,10 @@ function getStatusClass(status) {
       return "completed"
     case "warning":
       return "warning"
+    case "inactive":
+      return "inactive"
     case "normal":
+    case "active":
     default:
       return "normal"
   }
@@ -59,6 +80,27 @@ function mapMaterial(item) {
   return {
     ...item,
     statusClass: getStatusClass(item.statusKey),
+  }
+}
+
+function mapProduct(item) {
+  return {
+    ...item,
+    categoryText: item.category === "soup" ? "炖汤" : "面食",
+    statusText: item.isActive === false ? "已下架" : "已上架",
+    statusClass: item.isActive === false ? "inactive" : "normal",
+    compareAtPriceText: Number(item.compareAtPrice || item.price || 0).toFixed(2),
+    priceText: Number(item.price || 0).toFixed(2),
+  }
+}
+
+function mapCombo(item) {
+  return {
+    ...item,
+    statusText: item.isActive === false ? "已下架" : "已上架",
+    statusClass: item.isActive === false ? "inactive" : "normal",
+    priceText: Number(item.price || 0).toFixed(2),
+    limitText: Number(item.maxSoupPrice || 0) > 0 ? `限 ${Number(item.maxSoupPrice).toFixed(2)} 元以下炖汤` : "不限制汤品价格",
   }
 }
 
@@ -94,10 +136,48 @@ function groupMaterials(materials) {
   })
 }
 
+function getEmptyProductForm() {
+  return {
+    id: "",
+    name: "",
+    price: "",
+    compareAtPrice: "",
+    desc: "",
+    category: "soup",
+    stock: "0",
+    image: "",
+    isActive: true,
+  }
+}
+
+function getEmptyComboForm() {
+  return {
+    id: "",
+    name: "",
+    price: "",
+    desc: "",
+    noodleId: "",
+    maxSoupPrice: "0",
+    isActive: true,
+  }
+}
+
+function getEmptyMaterialForm() {
+  return {
+    id: "",
+    name: "",
+    unit: "个",
+    stock: "0",
+    warningLine: "0",
+    groupKey: "packaging",
+  }
+}
+
 Page({
   data: {
     summaryCards: [],
-    stocks: [],
+    products: [],
+    combos: [],
     materials: [],
     materialGroups: [],
     materialAlerts: [],
@@ -105,7 +185,22 @@ Page({
     orders: [],
     visibleOrders: [],
     orderFilter: "all",
-    activeModule: "orders",
+    activeModule: "products",
+    showOrderDetail: false,
+    currentOrder: null,
+    editorVisible: false,
+    editorType: "",
+    editorMode: "create",
+    editorTitle: "",
+    productForm: getEmptyProductForm(),
+    comboForm: getEmptyComboForm(),
+    materialForm: getEmptyMaterialForm(),
+    productCategoryIndex: 0,
+    comboNoodleIndex: 0,
+    comboNoodleOptions: [],
+    comboNoodleIds: [],
+    materialGroupIndex: 0,
+    imageUploading: false,
     ledgerDate: getTodayDate(),
     ledger: {
       summary: {
@@ -142,22 +237,31 @@ Page({
   async refresh() {
     const ledgerDate = this.data.ledgerDate || getTodayDate()
     try {
-      const [dashboard, orders, materials, ledger] = await Promise.all([
+      const [dashboard, orders, products, combos, materials, ledger] = await Promise.all([
         getDashboard(),
         getOrders(),
+        getProducts(),
+        getCombos(),
         getMaterials(),
         getLedger(ledgerDate),
       ])
+      const mappedProducts = products.map(mapProduct)
+      const mappedCombos = combos.map(mapCombo)
       const mappedMaterials = materials.map(mapMaterial)
+      const noodleOptions = mappedProducts.filter((item) => item.category === "noodle")
+
       this.setData({
         summaryCards: dashboard.summaryCards,
-        stocks: dashboard.stocks,
-        materials: mappedMaterials,
-        materialGroups: groupMaterials(mappedMaterials),
-        materialAlerts: (dashboard.materialAlerts || []).map(mapMaterial),
         reportText: dashboard.reportText,
         analytics: dashboard.analytics || this.data.analytics,
         orders: orders.map(mapOrder),
+        products: mappedProducts,
+        combos: mappedCombos,
+        materials: mappedMaterials,
+        materialGroups: groupMaterials(mappedMaterials),
+        materialAlerts: (dashboard.materialAlerts || []).map(mapMaterial),
+        comboNoodleOptions: noodleOptions,
+        comboNoodleIds: noodleOptions.map((item) => item.id),
         ledgerDate,
         ledger,
       })
@@ -192,43 +296,377 @@ Page({
     })
   },
 
-  async changeStock(e) {
-    const { id, delta } = e.currentTarget.dataset
-    const current = this.data.stocks.find((item) => item.id === id)
-    if (!current) return
-    const stock = Math.max(0, current.stock + Number(delta))
+  openCreateProduct() {
+    this.setData({
+      editorVisible: true,
+      editorType: "product",
+      editorMode: "create",
+      editorTitle: "新增菜品",
+      productForm: getEmptyProductForm(),
+      productCategoryIndex: 0,
+    })
+  },
+
+  openEditProduct(e) {
+    const product = this.data.products.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!product) return
+    this.setData({
+      editorVisible: true,
+      editorType: "product",
+      editorMode: "edit",
+      editorTitle: "编辑菜品",
+      productForm: {
+        id: product.id,
+        name: product.name,
+        price: String(product.price),
+        compareAtPrice: String(product.compareAtPrice || product.price),
+        desc: product.desc,
+        category: product.category,
+        stock: String(product.stock),
+        image: product.image,
+        isActive: product.isActive !== false,
+      },
+      productCategoryIndex: PRODUCT_CATEGORY_OPTIONS.findIndex((item) => item.value === product.category),
+    })
+  },
+
+  async toggleProductStatus(e) {
+    const product = this.data.products.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!product) return
     try {
-      await updateProductStock(id, stock)
+      await updateProduct(product.id, { isActive: product.isActive === false })
       await this.refresh()
+      wx.showToast({ title: product.isActive === false ? "已上架" : "已下架", icon: "success" })
     } catch (error) {
-      wx.showToast({ title: error.message || "修改失败", icon: "none" })
+      wx.showToast({ title: error.message || "更新失败", icon: "none" })
     }
   },
 
-  async changeMaterialStock(e) {
-    const { id, delta } = e.currentTarget.dataset
-    const current = this.data.materials.find((item) => item.id === id)
-    if (!current) return
-    const stock = Math.max(0, current.stock + Number(delta))
+  deleteProduct(e) {
+    const productId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: "删除菜品",
+      content: "删除后将无法恢复，确定继续吗？",
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deleteProduct(productId)
+          await this.refresh()
+          wx.showToast({ title: "菜品已删除", icon: "success" })
+        } catch (error) {
+          wx.showToast({ title: error.message || "删除失败", icon: "none" })
+        }
+      },
+    })
+  },
+
+  openCreateCombo() {
+    const defaultNoodleId = this.data.comboNoodleIds[0] || ""
+    this.setData({
+      editorVisible: true,
+      editorType: "combo",
+      editorMode: "create",
+      editorTitle: "新增套餐",
+      comboForm: {
+        ...getEmptyComboForm(),
+        noodleId: defaultNoodleId,
+      },
+      comboNoodleIndex: 0,
+    })
+  },
+
+  openEditCombo(e) {
+    const combo = this.data.combos.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!combo) return
+    const comboNoodleIndex = Math.max(0, this.data.comboNoodleIds.findIndex((item) => item === combo.noodleId))
+    this.setData({
+      editorVisible: true,
+      editorType: "combo",
+      editorMode: "edit",
+      editorTitle: "编辑套餐",
+      comboForm: {
+        id: combo.id,
+        name: combo.name,
+        price: String(combo.price),
+        desc: combo.desc,
+        noodleId: combo.noodleId,
+        maxSoupPrice: String(combo.maxSoupPrice || 0),
+        isActive: combo.isActive !== false,
+      },
+      comboNoodleIndex,
+    })
+  },
+
+  async toggleComboStatus(e) {
+    const combo = this.data.combos.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!combo) return
     try {
-      await updateMaterial(id, { stock })
+      await updateCombo(combo.id, { isActive: combo.isActive === false })
       await this.refresh()
+      wx.showToast({ title: combo.isActive === false ? "已上架" : "已下架", icon: "success" })
     } catch (error) {
-      wx.showToast({ title: error.message || "修改失败", icon: "none" })
+      wx.showToast({ title: error.message || "更新失败", icon: "none" })
     }
   },
 
-  async changeMaterialWarning(e) {
-    const { id, delta } = e.currentTarget.dataset
-    const current = this.data.materials.find((item) => item.id === id)
-    if (!current) return
-    const warningLine = Math.max(0, current.warningLine + Number(delta))
-    try {
-      await updateMaterial(id, { warningLine })
-      await this.refresh()
-    } catch (error) {
-      wx.showToast({ title: error.message || "修改失败", icon: "none" })
+  deleteCombo(e) {
+    const comboId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: "删除套餐",
+      content: "删除后将无法恢复，确定继续吗？",
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deleteCombo(comboId)
+          await this.refresh()
+          wx.showToast({ title: "套餐已删除", icon: "success" })
+        } catch (error) {
+          wx.showToast({ title: error.message || "删除失败", icon: "none" })
+        }
+      },
+    })
+  },
+
+  openCreateMaterial() {
+    this.setData({
+      editorVisible: true,
+      editorType: "material",
+      editorMode: "create",
+      editorTitle: "新增物料",
+      materialForm: getEmptyMaterialForm(),
+      materialGroupIndex: 0,
+    })
+  },
+
+  openEditMaterial(e) {
+    const material = this.data.materials.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!material) return
+    this.setData({
+      editorVisible: true,
+      editorType: "material",
+      editorMode: "edit",
+      editorTitle: "编辑物料",
+      materialForm: {
+        id: material.id,
+        name: material.name,
+        unit: material.unit,
+        stock: String(material.stock),
+        warningLine: String(material.warningLine),
+        groupKey: material.groupKey,
+      },
+      materialGroupIndex: MATERIAL_GROUP_OPTIONS.findIndex((item) => item.value === material.groupKey),
+    })
+  },
+
+  deleteMaterial(e) {
+    const materialId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: "删除物料",
+      content: "删除后将无法恢复，确定继续吗？",
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deleteMaterial(materialId)
+          await this.refresh()
+          wx.showToast({ title: "物料已删除", icon: "success" })
+        } catch (error) {
+          wx.showToast({ title: error.message || "删除失败", icon: "none" })
+        }
+      },
+    })
+  },
+
+  bindFormField(e) {
+    const field = e.currentTarget.dataset.field
+    const value = e.detail.value
+    if (this.data.editorType === "product") {
+      this.setData({ [`productForm.${field}`]: value })
+      return
     }
+    if (this.data.editorType === "combo") {
+      this.setData({ [`comboForm.${field}`]: value })
+      return
+    }
+    if (this.data.editorType === "material") {
+      this.setData({ [`materialForm.${field}`]: value })
+    }
+  },
+
+  chooseProductCategory(e) {
+    const index = Number(e.detail.value || 0)
+    this.setData({
+      productCategoryIndex: index,
+      "productForm.category": PRODUCT_CATEGORY_OPTIONS[index].value,
+    })
+  },
+
+  chooseComboNoodle(e) {
+    const index = Number(e.detail.value || 0)
+    this.setData({
+      comboNoodleIndex: index,
+      "comboForm.noodleId": this.data.comboNoodleIds[index] || "",
+    })
+  },
+
+  chooseMaterialGroup(e) {
+    const index = Number(e.detail.value || 0)
+    this.setData({
+      materialGroupIndex: index,
+      "materialForm.groupKey": MATERIAL_GROUP_OPTIONS[index].value,
+    })
+  },
+
+  async chooseProductImage(e) {
+    const sourceType = e.currentTarget.dataset.source === "camera" ? ["camera"] : ["album"]
+    try {
+      const result = await new Promise((resolve, reject) => {
+        wx.chooseMedia({
+          count: 1,
+          mediaType: ["image"],
+          sourceType,
+          sizeType: ["compressed"],
+          success: resolve,
+          fail: reject,
+        })
+      })
+      const media = result?.tempFiles?.[0]
+      if (!media?.tempFilePath) return
+
+      this.setData({ imageUploading: true })
+      const fsManager = wx.getFileSystemManager()
+      const readResult = await new Promise((resolve, reject) => {
+        fsManager.readFile({
+          filePath: media.tempFilePath,
+          encoding: "base64",
+          success: resolve,
+          fail: reject,
+        })
+      })
+      const extension = media.tempFilePath.split(".").pop() || "jpg"
+      const uploaded = await uploadImageBase64({
+        base64: readResult.data,
+        extension,
+        filePath: media.tempFilePath,
+      })
+      this.setData({
+        "productForm.image": uploaded.url || uploaded.path || media.tempFilePath,
+        imageUploading: false,
+      })
+      wx.showToast({ title: "图片已更新", icon: "success" })
+    } catch (error) {
+      this.setData({ imageUploading: false })
+      wx.showToast({ title: error.message || "图片上传失败", icon: "none" })
+    }
+  },
+
+  closeEditor() {
+    this.setData({
+      editorVisible: false,
+      editorType: "",
+      editorMode: "create",
+      editorTitle: "",
+      imageUploading: false,
+    })
+  },
+
+  async saveEditor() {
+    try {
+      if (this.data.editorType === "product") {
+        await this.saveProduct()
+      } else if (this.data.editorType === "combo") {
+        await this.saveCombo()
+      } else if (this.data.editorType === "material") {
+        await this.saveMaterial()
+      }
+    } catch (error) {
+      wx.showToast({ title: error.message || "保存失败", icon: "none" })
+    }
+  },
+
+  async saveProduct() {
+    const form = this.data.productForm
+    const payload = {
+      name: form.name.trim(),
+      price: Number(form.price),
+      compareAtPrice: Number(form.compareAtPrice || form.price),
+      desc: form.desc.trim(),
+      category: form.category,
+      stock: Number(form.stock),
+      image: form.image,
+      isActive: form.isActive !== false,
+    }
+    if (!payload.name || !payload.price || !payload.image) {
+      throw new Error("请完整填写菜品名称、价格和图片")
+    }
+    if (this.data.editorMode === "create") {
+      await addProduct(payload)
+    } else {
+      await updateProduct(form.id, payload)
+    }
+    await this.refresh()
+    this.closeEditor()
+    wx.showToast({ title: "菜品已保存", icon: "success" })
+  },
+
+  async saveCombo() {
+    const form = this.data.comboForm
+    const payload = {
+      name: form.name.trim(),
+      price: Number(form.price),
+      desc: form.desc.trim(),
+      noodleId: form.noodleId,
+      maxSoupPrice: Number(form.maxSoupPrice || 0),
+      isActive: form.isActive !== false,
+    }
+    if (!payload.name || !payload.price || !payload.noodleId) {
+      throw new Error("请完整填写套餐名称、价格和面食")
+    }
+    if (this.data.editorMode === "create") {
+      await addCombo(payload)
+    } else {
+      await updateCombo(form.id, payload)
+    }
+    await this.refresh()
+    this.closeEditor()
+    wx.showToast({ title: "套餐已保存", icon: "success" })
+  },
+
+  async saveMaterial() {
+    const form = this.data.materialForm
+    const payload = {
+      name: form.name.trim(),
+      unit: form.unit.trim(),
+      stock: Number(form.stock),
+      warningLine: Number(form.warningLine),
+      groupKey: form.groupKey,
+    }
+    if (!payload.name) {
+      throw new Error("请输入物料名称")
+    }
+    if (this.data.editorMode === "create") {
+      await addMaterial(payload)
+    } else {
+      await updateMaterial(form.id, payload)
+    }
+    await this.refresh()
+    this.closeEditor()
+    wx.showToast({ title: "物料已保存", icon: "success" })
+  },
+
+  openOrderDetail(e) {
+    const order = this.data.orders.find((item) => item.id === e.currentTarget.dataset.id)
+    if (!order) return
+    this.setData({
+      showOrderDetail: true,
+      currentOrder: order,
+    })
+  },
+
+  closeOrderDetail() {
+    this.setData({
+      showOrderDetail: false,
+      currentOrder: null,
+    })
   },
 
   async stepOrder(e) {
@@ -236,6 +674,10 @@ Page({
     try {
       await updateOrderStatus(id, status)
       await this.refresh()
+      if (this.data.currentOrder && this.data.currentOrder.id === id) {
+        const next = this.data.orders.find((item) => item.id === id)
+        this.setData({ currentOrder: next || null, showOrderDetail: !!next })
+      }
     } catch (error) {
       wx.showToast({ title: error.message || "更新失败", icon: "none" })
     }
