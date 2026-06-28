@@ -28,6 +28,7 @@ Page({
   data: {
     shop: catalog.shop,
     heroImage: catalog.images.hero,
+    heroFallbackImage: catalog.images.hero,
     routeImage: catalog.images.route,
     ownerQrImage: catalog.images.paymentQr,
     availableCount: 0,
@@ -77,6 +78,7 @@ Page({
     this.setData({
       shop: { ...this.data.shop, ...config },
       heroImage: seasonTheme.image || catalog.images.hero,
+      heroFallbackImage: catalog.images.hero,
       seasonTheme,
       signatureSoups,
       freshScenes: [
@@ -126,6 +128,15 @@ Page({
         ownerCode: "",
       })
     }
+  },
+
+  handleHeroImageError() {
+    if (this.data.heroImage === this.data.heroFallbackImage) {
+      return
+    }
+    this.setData({
+      heroImage: this.data.heroFallbackImage,
+    })
   },
 
   bindOwnerCode(e) {
