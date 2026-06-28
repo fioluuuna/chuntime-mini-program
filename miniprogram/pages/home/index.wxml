@@ -6,23 +6,7 @@
 
   <view class="card hero">
     <image class="image hero-image" src="{{heroImage}}" mode="aspectFill"></image>
-    <view class="hero-mask"></view>
-    <view class="hero-content">
-      <view class="hero-logo-area" bindtap="handleLogoTap">
-        <view class="hero-season-tag">{{seasonTheme.title}}</view>
-        <view class="hero-title">{{shop.name}}</view>
-        <view class="hero-subtitle">{{seasonTheme.copy}}</view>
-      </view>
-      <view class="hero-pills">
-        <text class="pill">{{shop.hours}}</text>
-        <text class="pill">{{shop.openingDiscountText}}</text>
-        <text class="pill">当前可点 {{availableCount}} 款</text>
-      </view>
-      <view class="hero-actions">
-        <view class="btn" bindtap="goTo" data-page="menu">马上点一单</view>
-        <view class="btn btn-ghost hero-ghost" bindtap="goTo" data-page="order">查看订单</view>
-      </view>
-    </view>
+    <view class="hero-hit-area" bindtap="handleLogoTap"></view>
   </view>
 
   <view class="card">

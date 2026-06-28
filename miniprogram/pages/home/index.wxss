@@ -3,76 +3,18 @@
   overflow: hidden;
   padding: 0;
   border-radius: 36rpx;
-  min-height: 520rpx;
+  min-height: 420rpx;
+  background: #efe5d8;
+  box-shadow: 0 24rpx 60rpx rgba(58, 33, 17, 0.12);
 }
 
 .hero-image {
-  height: 520rpx;
+  height: 420rpx;
 }
 
-.hero-mask {
+.hero-hit-area {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(20, 11, 7, 0.16), rgba(28, 16, 9, 0.86)),
-    linear-gradient(120deg, rgba(177, 98, 49, 0.12), transparent 42%);
-}
-
-.hero-content {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 34rpx 30rpx 30rpx;
-  color: #fff;
-}
-
-.hero-logo-area {
-  display: inline-block;
-}
-
-.hero-season-tag {
-  display: inline-flex;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  background: rgba(40, 25, 17, 0.38);
-  color: #fff;
-  font-size: 22rpx;
-  font-weight: 700;
-  text-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.22);
-}
-
-.hero-title {
-  margin-top: 16rpx;
-  font-size: 52rpx;
-  font-weight: 800;
-  letter-spacing: 4rpx;
-  text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.28);
-}
-
-.hero-subtitle {
-  margin-top: 12rpx;
-  font-size: 24rpx;
-  line-height: 1.7;
-  color: rgba(255, 250, 245, 0.95);
-  text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
-}
-
-.hero-pills {
-  margin-top: 20rpx;
-}
-
-.hero-actions {
-  margin-top: 14rpx;
-  display: flex;
-  gap: 16rpx;
-  flex-wrap: wrap;
-}
-
-.hero-ghost {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.12);
 }
 
 .quick-grid {

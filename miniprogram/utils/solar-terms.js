@@ -57,7 +57,7 @@ function getSolarTermTheme(inputDate = new Date()) {
       return {
         ...current,
         isPreheat: true,
-        title: current.preheatLabel,
+        title: current.name,
       }
     }
 
@@ -65,7 +65,7 @@ function getSolarTermTheme(inputDate = new Date()) {
       return {
         ...current,
         isPreheat: false,
-        title: current.label,
+        title: current.name,
       }
     }
   }
@@ -74,7 +74,7 @@ function getSolarTermTheme(inputDate = new Date()) {
   return {
     ...fallback,
     isPreheat: false,
-    title: fallback.label,
+    title: fallback.name,
   }
 }
 
