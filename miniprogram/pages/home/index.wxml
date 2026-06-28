@@ -8,11 +8,13 @@
     <image class="image hero-image" src="{{heroImage}}" mode="aspectFill" binderror="handleHeroImageError"></image>
     <view class="hero-overlay">
       <view class="hero-copy-shell">
-        <view class="hero-copy-panel">
+        <view class="hero-meta">
           <view class="hero-term">{{seasonTheme.name}}</view>
           <view class="hero-tip">{{seasonTheme.tip}}</view>
         </view>
-        <view class="hero-brand">炖时光</view>
+        <view class="hero-brand-wrap">
+          <view class="hero-brand">炖时光</view>
+        </view>
       </view>
     </view>
     <view class="hero-hit-area" bindtap="handleLogoTap"></view>
